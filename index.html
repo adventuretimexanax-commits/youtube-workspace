@@ -296,7 +296,7 @@
   #privacyBtn.is-on { color: var(--btn-text); background: var(--btn-fill); border-color: transparent; }
 
   /* ---------- calendars ---------- */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; align-items: start; }
 
   .card {
     position: relative; padding: 18px 18px 16px;
@@ -519,6 +519,36 @@
     #app-root *, #app-root *::before { animation-duration: .01ms !important; transition-duration: .01ms !important; }
   }
 </style>
+<style>
+  .workspace { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--stroke-soft); }
+  .workspace summary { cursor: pointer; font-size: 14px; font-weight: 650; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; list-style: none; }
+  .workspace summary::-webkit-details-marker { display: none; }
+  .workspace summary::after { content: '+'; font-size: 22px; color: var(--ink-2); order: 2; }
+  .workspace[open] summary::after { content: '−'; }
+  .workspace-preview { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; order: 3; }
+  .workspace-preview:empty { display: none; }
+  .workspace-tag { font-size: 11px; padding: 5px 8px; border-radius: 8px; color: var(--pulse-text); background: var(--soft); }
+  .workspace-body { padding-top: 18px; }
+  .workspace-section { margin-top: 20px; }
+  .workspace-section h4 { margin: 0 0 10px; font-size: 13px; }
+  .workspace label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 7px; }
+  .workspace input[type="text"], .workspace input[type="url"], .workspace select { width: 100%; min-width: 0; height: 40px; border-radius: 11px; padding: 0 10px; background: var(--input-bg); border: 1px solid var(--input-bd); color: var(--ink); font-size: 13px; }
+  .workspace select option { background: var(--page); color: var(--ink); }
+  .workspace input:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .workspace a { color: var(--pulse-text); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+  .workspace-link-row { padding: 10px; border: 1px solid var(--stroke-soft); border-radius: 14px; margin-bottom: 8px; display: grid; gap: 8px; }
+  .workspace-link-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .workspace .workspace-check { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 13px; margin: 12px 0; }
+  .workspace input[type="checkbox"] { width: 18px; height: 18px; accent-color: #00bd6d; }
+  #app-root .workspace-add, #app-root .workspace-remove { font-size: 12px; padding: 8px 10px; border-radius: 9px; background: var(--soft); color: var(--ink-2); }
+  #app-root .workspace-remove { color: var(--miss-text); }
+  #app-root .workspace-save { width: 100%; margin-top: 20px; padding: 12px; border-radius: 12px; background: var(--btn-fill); color: var(--btn-text); font-size: 13px; font-weight: 650; }
+  .workspace-hint { font-size: 11px; color: var(--ink-3); line-height: 1.5; margin: 8px 0; }
+  .workspace-status { font-size: 12px; margin-top: 8px; color: var(--pulse-text); }
+  .workspace-own-link { display: block; margin-top: 8px; }
+  .workspace [hidden] { display: none !important; }
+  .workspace-status:empty { display: none; }
+</style>
 </head>
 <body>
 <div id="app-root">
@@ -554,27 +584,6 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
     </button>
   </header>
-
-  <section class="spine" id="spine" style="display:none">
-    <div class="spine-head">
-      <div class="ring">
-        <svg width="46" height="46">
-          <circle class="track" cx="23" cy="23" r="19" fill="none" stroke-width="5"/>
-          <circle id="ringArc" cx="23" cy="23" r="19" fill="none" stroke="url(#gr)" stroke-width="5" stroke-linecap="round"
-                  stroke-dasharray="119.4" stroke-dashoffset="119.4" style="transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1)"/>
-          <defs><linearGradient id="gr" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#1ceb85"/><stop offset="100%" stop-color="#00b25b"/>
-          </linearGradient></defs>
-        </svg>
-        <div class="rtxt" id="ringTxt">0/0</div>
-      </div>
-      <div class="spine-copy">
-        <b id="spineTitle">Сегодня</b>
-        <span id="spineSub">—</span>
-      </div>
-    </div>
-    <div class="chips" id="chips"></div>
-  </section>
 
   <main class="grid" id="grid"></main>
 
@@ -798,13 +807,133 @@
 
   var FLAME = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 2.2c.6 3-1.2 4.5-2.7 6.3C8.2 10.5 7 12.4 7 14.6a5.6 5.6 0 0011.2 0c0-2.5-1.3-4.3-2.5-5.8-.3.9-.9 1.6-1.6 2 .6-2.5-.3-6.2-1.6-8.6z"/></svg>';
 
+  var workspaceOpen = {};
+  var VIDEO_FEATURES = [['motion', 'Моушн'], ['subtitles', 'Субтитры'], ['intro', 'Видео в начале']];
+  var VIDEO_MODELS = [['gpt', 'GPT'], ['banana', 'Банана'], ['veo', 'Видео Veo']];
+
+  function safeURL(value) {
+    var text = String(value || '').trim();
+    if (!text) return '';
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(text)) text = 'https://' + text;
+    try {
+      var url = new URL(text);
+      return /^(https?:)$/.test(url.protocol) && !url.username && !url.password ? url.href : '';
+    } catch (e) { return ''; }
+  }
+
+  function linkRowHTML(item, group, index) {
+    item = item || {};
+    var url = safeURL(item.url);
+    var groupName = group === 'competitors' ? 'конкурента' : 'референса';
+    return '<div class="workspace-link-row">' +
+      '<input type="text" data-link-name maxlength="120" aria-label="Название ' + groupName + ' ' + (index + 1) + '" placeholder="Название канала" value="' + esc(item.name || '') + '">' +
+      '<input type="url" data-link-url aria-label="Ссылка ' + groupName + ' ' + (index + 1) + '" placeholder="https://youtube.com/@channel" value="' + esc(item.url || '') + '">' +
+      '<div class="workspace-link-actions"><a data-link-open target="_blank" rel="noopener noreferrer"' + (url ? ' href="' + esc(url) + '"' : ' hidden') + '>Открыть канал ↗</a>' +
+      '<button type="button" class="workspace-remove" data-link-remove>Убрать</button></div></div>';
+  }
+
+  function featurePreview(ws) {
+    return VIDEO_FEATURES.filter(function (f) { return ws[f[0]] === true; }).map(function (f) {
+      return '<span class="workspace-tag">✓ ' + f[1] + '</span>';
+    }).join('') + VIDEO_MODELS.filter(function (model) { return ws.model === model[0]; }).map(function (model) {
+      return '<span class="workspace-tag">' + model[1] + '</span>';
+    }).join('');
+  }
+
+  function workspaceHTML(ch) {
+    var ws = ch.workspace || {}, id = esc(ch.id), ownURL = safeURL(ws.channelURL);
+    return '<details class="workspace" data-workspace="' + id + '"' + (workspaceOpen[ch.id] ? ' open' : '') + '>' +
+      '<summary><span>Рабочее пространство</span><span class="workspace-preview">' + featurePreview(ws) + '</span></summary>' +
+      '<div class="workspace-body"><label for="channel-url-' + id + '">Мой YouTube-канал</label>' +
+      '<input type="url" id="channel-url-' + id + '" data-own-url placeholder="https://youtube.com/@mychannel" value="' + esc(ws.channelURL || '') + '">' +
+      '<a class="workspace-own-link" data-own-open target="_blank" rel="noopener noreferrer"' + (ownURL ? ' href="' + esc(ownURL) + '"' : ' hidden') + '>Открыть мой канал ↗</a>' +
+      ['competitors', 'references'].map(function (group) {
+        var list = Array.isArray(ws[group]) ? ws[group] : [];
+        return '<section class="workspace-section"><h4>' + (group === 'competitors' ? 'Конкуренты' : 'Референсы') + '</h4>' +
+          '<div data-link-list="' + group + '">' + list.map(function (item, i) { return linkRowHTML(item, group, i); }).join('') + '</div>' +
+          '<button type="button" class="workspace-add" data-link-add="' + group + '">+ Добавить ' + (group === 'competitors' ? 'конкурента' : 'референс') + '</button></section>';
+      }).join('') +
+      '<section class="workspace-section"><h4>Особенности видео</h4>' +
+      VIDEO_FEATURES.map(function (f) { return '<label class="workspace-check"><input type="checkbox" data-feature="' + f[0] + '"' + (ws[f[0]] === true ? ' checked' : '') + '>' + f[1] + '</label>'; }).join('') +
+      '<p class="workspace-hint">Постоянные настройки этого канала.</p></section>' +
+      '<section class="workspace-section"><label for="model-' + id + '">Модель</label><select id="model-' + id + '" data-model>' +
+      '<option value="">Не выбрана</option>' + VIDEO_MODELS.map(function (model) {
+        return '<option value="' + model[0] + '"' + (ws.model === model[0] ? ' selected' : '') + '>' + model[1] + '</option>';
+      }).join('') + '</select></section>' +
+      '<button type="button" class="workspace-save" data-workspace-save>Сохранить настройки</button>' +
+      '<div class="workspace-status" role="status"></div></div></details>';
+  }
+
+  root.addEventListener('toggle', function (e) {
+    if (e.target.matches && e.target.matches('[data-workspace]')) workspaceOpen[e.target.getAttribute('data-workspace')] = e.target.open;
+  }, true);
+
+  root.addEventListener('input', function (e) {
+    var box = e.target.closest('[data-workspace]');
+    if (!box) return;
+    box.querySelector('.workspace-status').textContent = 'Есть несохранённые изменения';
+    var link = e.target.matches('[data-own-url]') ? box.querySelector('[data-own-open]') :
+      e.target.matches('[data-link-url]') ? e.target.closest('.workspace-link-row').querySelector('[data-link-open]') : null;
+    if (link) {
+      var url = safeURL(e.target.value);
+      link.hidden = !url;
+      if (url) link.href = url; else link.removeAttribute('href');
+    }
+  });
+
+  root.addEventListener('click', function (e) {
+    var box = e.target.closest('[data-workspace]');
+    if (!box) return;
+    var add = e.target.closest('[data-link-add]'), remove = e.target.closest('[data-link-remove]');
+    if (add) {
+      var group = add.getAttribute('data-link-add'), list = box.querySelector('[data-link-list="' + group + '"]');
+      list.insertAdjacentHTML('beforeend', linkRowHTML({}, group, list.children.length));
+      list.lastElementChild.querySelector('input').focus();
+      box.querySelector('.workspace-status').textContent = 'Есть несохранённые изменения';
+    }
+    if (remove) {
+      remove.closest('.workspace-link-row').remove();
+      box.querySelector('.workspace-status').textContent = 'Есть несохранённые изменения';
+    }
+    if (!e.target.closest('[data-workspace-save]')) return;
+    var channel = state.channels.find(function (c) { return c.id === box.getAttribute('data-workspace'); });
+    if (!channel) return;
+    var ws = Object.assign({}, channel.workspace || {}), bad = null;
+    var own = box.querySelector('[data-own-url]'), ownURL = safeURL(own.value);
+    if (own.value.trim() && (!ownURL || !/^(www\.|m\.)?youtube\.com$|^youtu\.be$/i.test(new URL(ownURL).hostname))) bad = own;
+    ws.channelURL = ownURL;
+    ['competitors', 'references'].forEach(function (group) {
+      ws[group] = Array.from(box.querySelector('[data-link-list="' + group + '"]').children).map(function (row) {
+        var name = row.querySelector('[data-link-name]').value.trim(), input = row.querySelector('[data-link-url]'), url = safeURL(input.value);
+        if (input.value.trim() && !url || name && !url) bad = bad || input;
+        return { name: name, url: url };
+      }).filter(function (item) { return item.url; });
+    });
+    if (bad) { bad.focus(); box.querySelector('.workspace-status').textContent = 'Проверьте ссылку: для своего канала нужна ссылка YouTube'; return; }
+    VIDEO_FEATURES.forEach(function (f) { ws[f[0]] = box.querySelector('[data-feature="' + f[0] + '"]').checked; });
+    ws.model = box.querySelector('[data-model]').value;
+    // Only append project settings; existing channel properties and calendar marks remain untouched.
+    var previous = channel.workspace;
+    channel.workspace = ws;
+    clearTimeout(saveTimer);
+    var button = box.querySelector('[data-workspace-save]');
+    button.disabled = true;
+    store.set(KEY, JSON.stringify({ channels: state.channels, marks: state.marks })).then(function () {
+      box.querySelector('.workspace-preview').innerHTML = featurePreview(ws);
+      box.querySelector('.workspace-status').textContent = 'Настройки сохранены';
+      toast('Настройки проекта сохранены');
+    }).catch(function () {
+      if (previous === undefined) delete channel.workspace; else channel.workspace = previous;
+      box.querySelector('.workspace-status').textContent = 'Не удалось сохранить. Скачайте резервную копию и попробуйте ещё раз.';
+    }).finally(function () { button.disabled = false; });
+  });
+
   function render() {
     var y = view.getFullYear(), m = view.getMonth();
     $('monthLabel').textContent = MONTHS_N[m] + ' ' + y;
     var grid = $('grid');
 
     if (!state.channels.length) {
-      $('spine').style.display = 'none';
       $('legend').style.display = 'none';
       $('brandSub').textContent = loaded ? 'Каналов пока нет' : 'Загрузка…';
       grid.innerHTML = '<div class="empty"><h2>Добавьте первый канал</h2>' +
@@ -816,23 +945,10 @@
       return;
     }
 
-    var doneToday = state.channels.filter(function (c) { return markOf(c, TODAY) === 'done'; }).length;
     var total = state.channels.length;
     $('brandSub').textContent = total + ' ' + plural(total, ['канал', 'канала', 'каналов']);
 
-    $('spine').style.display = '';
     $('legend').style.display = '';
-    $('ringTxt').textContent = doneToday + '/' + total;
-    $('ringArc').style.strokeDashoffset = String(119.4 * (1 - doneToday / total));
-    $('spineTitle').textContent = doneToday === total ? 'День закрыт' : 'Сегодня осталось: ' + (total - doneToday);
-    var td = new Date();
-    $('spineSub').textContent = td.getDate() + ' ' + MONTHS[td.getMonth()] + ', ' + DOWFULL[td.getDay()];
-
-    $('chips').innerHTML = state.channels.map(function (c) {
-      var s = markOf(c, TODAY);
-      return '<button class="chip ' + (s ? 'st-' + s : '') + '" data-chip="' + c.id + '">' +
-        avBox(c, '') + nameHTML(c) + '</button>';
-    }).join('');
 
     var offset = (new Date(y, m, 1).getDay() + 6) % 7;
     var lastDay = new Date(y, m + 1, 0).getDate();
@@ -867,7 +983,7 @@
           '<div class="stat r"><b>' + st.miss + '</b> ' + plural(st.miss, ['пропуск','пропуска','пропусков']) + '</div>' +
           (st.ahead ? '<div class="stat g"><b>' + st.ahead + '</b> в плане</div>' : '') +
           '<div class="bar" title="' + st.pct + '%"><i style="width:' + st.pct + '%"></i></div>' +
-        '</div></article>';
+        '</div>' + workspaceHTML(ch) + '</article>';
     }).join('');
   }
 
@@ -958,13 +1074,6 @@
     var day = e.target.closest('[data-d]');
     if (day) { openChooser(day); return; }
 
-    var chip = e.target.closest('[data-chip]');
-    if (chip) {
-      var c = null, id = chip.getAttribute('data-chip');
-      for (var i = 0; i < state.channels.length; i++) if (state.channels[i].id === id) c = state.channels[i];
-      applyMark(c.id, TODAY, markOf(c, TODAY) === 'done' ? null : 'done');
-      return;
-    }
     var ed = e.target.closest('[data-edit]');
     if (ed) {
       var eid = ed.getAttribute('data-edit');
