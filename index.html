@@ -824,7 +824,7 @@
   function linkRowHTML(item, group, index) {
     item = item || {};
     var url = safeURL(item.url);
-    var groupName = group === 'competitors' ? 'конкурента' : 'референса';
+    var groupName = 'конкурента';
     return '<div class="workspace-link-row">' +
       '<input type="text" data-link-name maxlength="120" aria-label="Название ' + groupName + ' ' + (index + 1) + '" placeholder="Название канала" value="' + esc(item.name || '') + '">' +
       '<input type="url" data-link-url aria-label="Ссылка ' + groupName + ' ' + (index + 1) + '" placeholder="https://youtube.com/@channel" value="' + esc(item.url || '') + '">' +
@@ -847,11 +847,11 @@
       '<div class="workspace-body"><label for="channel-url-' + id + '">Мой YouTube-канал</label>' +
       '<input type="url" id="channel-url-' + id + '" data-own-url placeholder="https://youtube.com/@mychannel" value="' + esc(ws.channelURL || '') + '">' +
       '<a class="workspace-own-link" data-own-open target="_blank" rel="noopener noreferrer"' + (ownURL ? ' href="' + esc(ownURL) + '"' : ' hidden') + '>Открыть мой канал ↗</a>' +
-      ['competitors', 'references'].map(function (group) {
+      ['competitors'].map(function (group) {
         var list = Array.isArray(ws[group]) ? ws[group] : [];
-        return '<section class="workspace-section"><h4>' + (group === 'competitors' ? 'Конкуренты' : 'Референсы') + '</h4>' +
+        return '<section class="workspace-section"><h4>Конкуренты</h4>' +
           '<div data-link-list="' + group + '">' + list.map(function (item, i) { return linkRowHTML(item, group, i); }).join('') + '</div>' +
-          '<button type="button" class="workspace-add" data-link-add="' + group + '">+ Добавить ' + (group === 'competitors' ? 'конкурента' : 'референс') + '</button></section>';
+          '<button type="button" class="workspace-add" data-link-add="' + group + '">+ Добавить конкурента</button></section>';
       }).join('') +
       '<section class="workspace-section"><h4>Особенности видео</h4>' +
       VIDEO_FEATURES.map(function (f) { return '<label class="workspace-check"><input type="checkbox" data-feature="' + f[0] + '"' + (ws[f[0]] === true ? ' checked' : '') + '>' + f[1] + '</label>'; }).join('') +
@@ -902,7 +902,7 @@
     var own = box.querySelector('[data-own-url]'), ownURL = safeURL(own.value);
     if (own.value.trim() && (!ownURL || !/^(www\.|m\.)?youtube\.com$|^youtu\.be$/i.test(new URL(ownURL).hostname))) bad = own;
     ws.channelURL = ownURL;
-    ['competitors', 'references'].forEach(function (group) {
+    ['competitors'].forEach(function (group) {
       ws[group] = Array.from(box.querySelector('[data-link-list="' + group + '"]').children).map(function (row) {
         var name = row.querySelector('[data-link-name]').value.trim(), input = row.querySelector('[data-link-url]'), url = safeURL(input.value);
         if (input.value.trim() && !url || name && !url) bad = bad || input;
