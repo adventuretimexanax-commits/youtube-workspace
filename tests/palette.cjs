@@ -5,6 +5,8 @@ const html = fs.readFileSync(path.join(__dirname, '../index.html'),'utf8');
 const css = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(m=>m[1]).join('\n');
 assert.match(css,/--pulse: #ffd84d/);
 assert.match(css,/--pulse-deep: #f2cb3f/);
+assert.match(css,/#app-root \.btn-primary\s*\{/,'primary fill overrides base button reset');
+assert.match(css,/#app-root \.b-save\s*\{/,'save fill overrides base button reset');
 assert.ok(!css.includes('#ffe600') && !css.includes('#fff34d'),'no neon success fills');
 assert.match(css,/rgba\(255,216,77,0\.08\)/,'subtle calendar glow');
 assert.match(css,/--page: #090b10/);
