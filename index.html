@@ -455,6 +455,16 @@
   }
   @keyframes lift { from { opacity: 0; transform: translateY(14px) scale(0.97); } }
   .sheet h3 { margin: 0 0 20px; font-size: 19px; font-weight: 700; letter-spacing: -0.4px; }
+  .db-sheet { max-width: 1100px; }
+  .db-scroll { overflow-x: auto; margin-top: 18px; }
+  .db-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+  .db-table th, .db-table td { padding: 8px; border: 1px solid var(--stroke); text-align: left; }
+  .db-table th { font-size: 12px; color: var(--ink-2); }
+  .db-table input { width: 100%; min-width: 130px; padding: 10px; color: var(--ink); background: var(--input-bg); border: 1px solid var(--input-bd); border-radius: 8px; }
+  .db-table input:focus { outline: 2px solid var(--ink-3); }
+  .db-table .db-locked { font-size: 12px; color: var(--ink-3); }
+  .db-tools { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .db-status { min-height: 20px; margin-top: 12px; color: var(--ink-2); font-size: 13px; }
   .field { margin-bottom: 16px; }
   .field label { display: block; margin-bottom: 7px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
   .field input[type="text"], .field input[type="date"] {
@@ -576,6 +586,10 @@
     <button class="btn-ghost" id="privacyBtn" aria-label="Скрыть названия и аватарки" title="Демо-режим"></button>
     <button class="btn-ghost" id="themeBtn" aria-label="Сменить тему" title="Сменить тему"></button>
 
+    <button class="btn-primary" id="dbBtn" aria-haspopup="dialog">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7V5h7l2 2h9v13H3z"/></svg>
+      БДшка
+    </button>
     <button class="btn-primary" id="addBtn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       Добавить канал
@@ -1091,6 +1105,90 @@
   $('nextM').onclick = function () { view.setMonth(view.getMonth() + 1); render(); };
   $('jumpToday').onclick = function () { view = new Date(); view.setDate(1); render(); };
   $('addBtn').onclick = function () { openEditor(null); };
+
+  /* Separate, local-only directory: never store passwords or 2FA seeds here. */
+  var DB_KEY = 'uploadtracker:directory:v1';
+  function directoryRows(rows) {
+    if (!Array.isArray(rows) || rows.length > 1000) throw new Error('Некорректная таблица');
+    return rows.map(function (row) {
+      var clean = {};
+      ['email', 'name', 'subscription', 'proxy'].forEach(function (field) {
+        var value = row && typeof row[field] === 'string' ? row[field].trim() : '';
+        if (value.length > 300) throw new Error('Ячейка слишком длинная');
+        clean[field] = value;
+      });
+      if (clean.email && !/^[^\s@]+@gmail\.com$/i.test(clean.email)) throw new Error('Укажите Gmail: name@gmail.com');
+      if (clean.proxy) {
+        // Endpoint only. Reject credentials, tokens, paths and query strings.
+        if (!/^(?:(?:https?|socks4|socks5):\/\/)?(?:[a-z0-9.-]+|\[[a-f0-9:]+\]):\d{1,5}$/i.test(clean.proxy)) {
+          throw new Error('Прокси: только host:port, без логина, пароля и токенов');
+        }
+        var port = Number(clean.proxy.slice(clean.proxy.lastIndexOf(':') + 1));
+        if (port < 1 || port > 65535) throw new Error('Порт прокси: от 1 до 65535');
+      }
+      return clean;
+    });
+  }
+  function openDirectory() {
+    closeChooser();
+    var rows;
+    try { rows = directoryRows(JSON.parse(localStorage.getItem(DB_KEY) || '[]')); }
+    catch (err) { toast('БДшка не открылась: данные не изменены'); return; }
+    var shown = false;
+    $('veil').innerHTML = '<div class="sheet db-sheet" role="dialog" aria-modal="true" aria-labelledby="dbTitle">' +
+      '<h3 id="dbTitle">БДшка</h3><p class="warn">Локальная таблица в этом браузере. Не синхронизируется и не входит в резервную копию календаря.</p>' +
+      '<p class="warn">Не вводите секреты: пароли, данные входа и ключи 2FA храните в менеджере паролей. Глазик скрывает почту и адрес прокси только на экране, не шифрует их.</p>' +
+      '<div class="db-tools"><button class="btn-primary" id="dbAdd">+ Строка</button><button class="btn-ghost" id="dbEye" aria-label="Показать почты и прокси" aria-pressed="false">' + EYE + '</button></div>' +
+      '<div class="db-scroll"><table class="db-table"><thead><tr><th scope="col">Gmail</th><th scope="col">Название</th><th scope="col">Подписка</th><th scope="col">Пароль / вход / 2FA</th><th scope="col">Прокси (без пароля)</th><th scope="col">Действие</th></tr></thead><tbody id="dbRows"></tbody></table></div>' +
+      '<div class="db-status" id="dbStatus" role="status" aria-live="polite"></div><div class="sheet-actions"><button class="b-cancel" id="dbCancel">Отмена</button><button class="b-save" id="dbSave">Сохранить</button></div></div>';
+    function paintRows() {
+      $('dbRows').innerHTML = rows.map(function (row, i) {
+        return '<tr>' + ['email', 'name', 'subscription'].map(function (field) {
+          return cell(field, row[field], i);
+        }).join('') + '<td class="db-locked">Не храним — нет защищённого хранилища</td>' + cell('proxy', row.proxy, i) +
+          '<td><button class="btn-ghost" data-db-delete="' + i + '" aria-label="Удалить строку ' + (i + 1) + '">×</button></td></tr>';
+      }).join('');
+    }
+    function cell(field, value, i) {
+      var labels = {email:'Gmail', name:'Название', subscription:'Подписка', proxy:'Прокси'};
+      var hidden = !shown && (field === 'email' || field === 'proxy');
+      return '<td><input type="' + (hidden ? 'password' : 'text') + '" data-db-field="' + field + '" data-db-row="' + i + '" aria-label="' + labels[field] + ', строка ' + (i + 1) + '" value="' + esc(value || '') + '" maxlength="300" autocomplete="off" spellcheck="false"></td>';
+    }
+    $('dbRows').oninput = function (e) {
+      var field = e.target.getAttribute('data-db-field');
+      if (field) rows[Number(e.target.getAttribute('data-db-row'))][field] = e.target.value;
+      $('dbStatus').textContent = 'Есть несохранённые изменения';
+    };
+    $('dbRows').onclick = function (e) {
+      var button = e.target.closest('[data-db-delete]');
+      if (!button) return;
+      rows.splice(Number(button.getAttribute('data-db-delete')), 1); paintRows();
+      $('dbStatus').textContent = 'Удаление применится после сохранения';
+    };
+    $('dbAdd').onclick = function () {
+      if (rows.length >= 1000) { $('dbStatus').textContent = 'Максимум 1000 строк'; return; }
+      rows.push({email:'', name:'', subscription:'', proxy:''}); paintRows();
+      $('dbRows').lastElementChild.querySelector('input').focus();
+      $('dbStatus').textContent = 'Есть несохранённые изменения';
+    };
+    $('dbEye').onclick = function () {
+      shown = !shown;
+      $('dbRows').querySelectorAll('[data-db-field="email"], [data-db-field="proxy"]').forEach(function (input) { input.type = shown ? 'text' : 'password'; });
+      $('dbEye').innerHTML = shown ? EYE_OFF : EYE;
+      $('dbEye').setAttribute('aria-label', shown ? 'Скрыть почты и прокси' : 'Показать почты и прокси');
+      $('dbEye').setAttribute('aria-pressed', String(shown));
+    };
+    $('dbSave').onclick = function () {
+      try {
+        var clean = directoryRows(rows);
+        localStorage.setItem(DB_KEY, JSON.stringify(clean));
+        rows = clean; $('dbStatus').textContent = 'Сохранено в этом браузере'; toast('БДшка сохранена');
+      } catch (err) { $('dbStatus').textContent = 'Не сохранено: ' + err.message; }
+    };
+    $('dbCancel').onclick = closeVeil;
+    paintRows(); $('veil').classList.add('is-open'); $('dbAdd').focus();
+  }
+  $('dbBtn').onclick = openDirectory;
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { closeChooser(); closeVeil(); $('menu').classList.remove('is-open'); }
