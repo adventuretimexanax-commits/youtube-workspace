@@ -347,7 +347,7 @@
     background-color: var(--pulse);
     background-image: linear-gradient(168deg, var(--pulse) 0%, var(--pulse) 52%, var(--pulse-deep) 100%);
     border-color: rgba(255,255,255,0.4);
-    box-shadow: 0 3px 8px rgba(255,216,77,0.12), 0 0 12px rgba(255,216,77,0.08);
+    box-shadow: 0 4px 12px rgba(255,216,77,0.24), 0 0 20px rgba(255,216,77,0.2);
     text-shadow: none;
   }
   #app-root .day.st-miss {
@@ -372,7 +372,7 @@
   }
   #app-root .day.is-today.st-plan { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring); }
   #app-root .day.is-today         { box-shadow: 0 0 0 2.5px var(--ring); }
-  #app-root .day.is-today.st-done { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring), 0 0 12px rgba(255,216,77,0.16); }
+  #app-root .day.is-today.st-done { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring), 0 0 24px rgba(255,216,77,0.3); }
   #app-root .day.is-today.st-miss { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring); }
   #app-root .day.is-today.st-rest { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring); }
   #app-root .day.is-picked        { transform: scale(1.08); z-index: 3; }
@@ -488,6 +488,38 @@
   #app-root .b-save { color: var(--btn-text); background: var(--btn-fill); box-shadow: var(--btn-shadow); }
   .b-del { color: #fff; background: linear-gradient(180deg, #ff6467, #e02424); box-shadow: 0 6px 18px rgba(224,36,36,0.32); }
   .sheet p.warn { margin: 0 0 4px; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+
+  /* Glass controls: layered specular reflections, translucent tint and a fine rim. */
+  #app-root .btn-primary, #app-root .btn-ghost, #app-root .navbtn,
+  #app-root .todaybtn, #app-root .b-save, #app-root .b-cancel, #app-root .opt {
+    position: relative; isolation: isolate; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.24);
+    backdrop-filter: blur(18px) saturate(155%);
+    -webkit-backdrop-filter: blur(18px) saturate(155%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,0,0,0.2), 0 5px 14px rgba(0,0,0,0.18);
+  }
+  #app-root .btn-ghost, #app-root .navbtn, #app-root .todaybtn, #app-root .b-cancel {
+    color: var(--ink);
+    background: linear-gradient(155deg, rgba(255,255,255,0.18), rgba(255,255,255,0.035) 52%, rgba(255,255,255,0.09));
+  }
+  #app-root .btn-primary::before, #app-root .btn-ghost::before, #app-root .navbtn::before,
+  #app-root .todaybtn::before, #app-root .b-save::before, #app-root .b-cancel::before,
+  #app-root .opt::before, #app-root .day.st-done::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: radial-gradient(ellipse at 22% -12%, rgba(255,255,255,0.56), transparent 62%),
+      linear-gradient(118deg, transparent 24%, rgba(255,255,255,0.14) 37%, transparent 51%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.62), inset 1px 0 0 rgba(255,255,255,0.18);
+  }
+  :root[data-theme="dark"] #app-root .btn-primary,
+  :root[data-theme="dark"] #app-root .b-save {
+    color: #171600;
+    background: linear-gradient(155deg, rgba(255,227,133,0.94), rgba(255,216,77,0.82) 55%, rgba(242,203,63,0.9));
+    border-color: rgba(255,243,198,0.58);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(118,80,0,0.24),
+      0 5px 14px rgba(0,0,0,0.22), 0 0 20px rgba(255,216,77,0.22);
+  }
+  #app-root .btn-primary:hover, #app-root .b-save:hover { filter: brightness(1.06); }
+  #app-root .day.st-done { position: relative; overflow: hidden; }
 
   .toast {
     position: fixed; left: 50%; bottom: 26px; z-index: 60; transform: translate(-50%, 24px);
