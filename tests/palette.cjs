@@ -9,7 +9,10 @@ assert.match(css,/#app-root \.btn-primary\s*\{/,'primary fill overrides base but
 assert.match(css,/#app-root \.b-save\s*\{/,'save fill overrides base button reset');
 assert.ok(!css.includes('#ffe600') && !css.includes('#fff34d'),'no neon success fills');
 assert.match(css,/0 0 20px rgba\(255,216,77,0\.2\)/,'restored calendar glow');
-assert.match(css,/backdrop-filter: blur\(18px\) saturate\(155%\)/,'glass blur');
+assert.match(css,/backdrop-filter: blur\(12px\) saturate\(150%\)/,'glass blur');
+assert.match(css,/rgba\(255,216,77,0\.09\) 55%/,'transparent gold glass');
+assert.match(css,/color: #ffe390/,'readable light label on transparent gold');
+assert.match(css,/\.btn-primary::after/,'lower glass reflection');
 assert.match(css,/\.btn-primary::before/,'glass reflections');
 assert.match(css,/border-radius: inherit; pointer-events: none/,'reflections cannot block clicks');
 assert.match(css,/--page: #090b10/);
