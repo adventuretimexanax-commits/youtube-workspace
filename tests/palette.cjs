@@ -3,9 +3,10 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const html = fs.readFileSync(path.join(__dirname, '../index.html'),'utf8');
 const css = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(m=>m[1]).join('\n');
-assert.match(css,/--pulse: #e7d79b/);
+assert.match(css,/--pulse: #ffd84d/);
+assert.match(css,/--pulse-deep: #f2cb3f/);
 assert.ok(!css.includes('#ffe600') && !css.includes('#fff34d'),'no neon success fills');
-assert.match(css,/rgba\(231,215,155,0\.08\)/,'subtle calendar glow');
+assert.match(css,/rgba\(255,216,77,0\.08\)/,'subtle calendar glow');
 assert.match(css,/--page: #090b10/);
 assert.match(css,/#app-root \.day\.st-done\s*\{\s*color: #171600/);
 assert.match(css,/#app-root \.opt-yes\s*\{\s*color: #171600/);
@@ -16,12 +17,12 @@ for (const green of ['#00d76f','#00b25b','#1ceb85','#2ae893','#00bd6d','0,215,11
 assert.match(html,/t = 'dark'/);
 assert.match(html,/var KEY = 'uploadtracker:v1'/);
 assert.match(html,/var DB_KEY = 'uploadtracker:directory:v1'/);
-assert.match(html,/indexOf\(ch.accent\) !== -1 \? '#f1e5bc,#c9b77c'/);
+assert.match(html,/indexOf\(ch.accent\) !== -1 \? '#ffd84d,#f2cb3f'/);
 const accents = html.match(/var ACCENTS = \[([\s\S]*?)\];/)[1].match(/'#[^']+'/g);
 assert.equal(accents.length,24);
 assert.equal(new Set(accents).size,24);
 assert.match(css,/\.swatches\s*\{[^}]*flex-wrap: wrap/);
-const yellow = [201,183,124], ink = [23,22,0];
+const yellow = [242,203,63], ink = [23,22,0];
 function luminance(rgb) { return rgb.map(c=>c/255).map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0); }
 assert.ok((luminance(yellow)+.05)/(luminance(ink)+.05)>7,'yellow cell contrast');
 console.log('PASS: yellow palette, dark default, dark text contrast, legacy avatar display, stable storage keys');

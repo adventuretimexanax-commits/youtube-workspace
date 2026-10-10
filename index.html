@@ -67,7 +67,7 @@
     --toast-text: #ffffff;
 
     --veil-bg: rgba(11, 13, 18, 0.2);
-    --pulse-text: #75633b;
+    --pulse-text: #806514;
     --miss-text: #e02424;
     --rest-a: #b9beca;
     --rest-b: #a1a7b5;
@@ -125,15 +125,15 @@
     --input-bd: rgba(255, 255, 255, 0.13);
     --input-focus-bg: rgba(255, 255, 255, 0.1);
 
-    --btn-fill: linear-gradient(180deg, #f7f9fd, #e2e6ef);
+    --btn-fill: linear-gradient(180deg, #ffd84d, #f2cb3f);
     --btn-text: #0b0d12;
-    --btn-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    --btn-shadow: 0 6px 18px rgba(255, 216, 77, 0.12);
 
     --toast-bg: rgba(238, 241, 247, 0.95);
     --toast-text: #0b0d12;
 
     --veil-bg: rgba(4, 5, 8, 0.55);
-    --pulse-text: #e7d79b;
+    --pulse-text: #ffd84d;
     --miss-text: #ff7070;
     --rest-a: #4d5464;
     --rest-b: #3d4351;
@@ -156,8 +156,8 @@
   html, body { margin: 0; padding: 0; background: var(--page); transition: background .45s ease; }
 
   #app-root {
-    --pulse: #e7d79b;
-    --pulse-deep: #c9b77c;
+    --pulse: #ffd84d;
+    --pulse-deep: #f2cb3f;
     --miss: #ff3b3b;
     --miss-deep: #e02424;
     --r-lg: 26px;
@@ -187,7 +187,7 @@
     position: fixed; inset: -20vh -10vw; z-index: 0; pointer-events: none;
     opacity: var(--amb-op); transition: opacity .45s ease;
     background:
-      radial-gradient(46vw 46vw at 12% 8%,  rgba(231, 215, 155, 0.3), transparent 62%),
+      radial-gradient(46vw 46vw at 12% 8%,  rgba(255, 216, 77, 0.3), transparent 62%),
       radial-gradient(52vw 52vw at 88% 4%,  rgba(196, 208, 255, 0.55), transparent 64%),
       radial-gradient(44vw 44vw at 76% 82%, rgba(255, 208, 220, 0.45), transparent 62%),
       radial-gradient(40vw 40vw at 18% 92%, rgba(214, 238, 255, 0.5), transparent 62%);
@@ -196,7 +196,7 @@
   }
   :root[data-theme="dark"] .amb {
     background:
-      radial-gradient(50vw 50vw at 10% 4%,  rgba(231, 215, 155, 0.1), transparent 62%),
+      radial-gradient(50vw 50vw at 10% 4%,  rgba(255, 216, 77, 0.1), transparent 62%),
       radial-gradient(56vw 56vw at 90% 2%,  rgba(70, 90, 230, 0.36), transparent 64%),
       radial-gradient(48vw 48vw at 78% 86%, rgba(210, 60, 130, 0.28), transparent 62%),
       radial-gradient(42vw 42vw at 14% 94%, rgba(30, 120, 220, 0.3), transparent 62%);
@@ -279,10 +279,10 @@
   .chip:hover { transform: translateY(-2px); background: var(--glass-strong); }
   .chip:active { transform: translateY(0) scale(0.97); }
   .chip .av { width: 30px; height: 30px; border-radius: 50%; }
-  #app-root .chip.st-done { color: #171600; background: linear-gradient(180deg, #f1e5bc, var(--pulse-deep)); border-color: rgba(255,255,255,0.4); box-shadow: 0 4px 12px rgba(231,215,155,0.12); }
+  #app-root .chip.st-done { color: #171600; background: linear-gradient(180deg, var(--pulse), var(--pulse-deep)); border-color: rgba(255,255,255,0.4); box-shadow: 0 4px 12px rgba(255,216,77,0.12); }
   #app-root .chip.st-miss { color: #fff; background: linear-gradient(180deg, #ff6060, #e02424); border-color: rgba(255,255,255,0.4); box-shadow: 0 6px 16px rgba(224,36,36,0.3); }
   #app-root .chip.st-rest { color: #fff; background: linear-gradient(180deg, var(--rest-a), var(--rest-b)); border-color: rgba(255,255,255,0.3); }
-  #app-root .chip.st-plan { color: var(--pulse-text); background: rgba(231,215,155,0.09); border-color: var(--pulse); }
+  #app-root .chip.st-plan { color: var(--pulse-text); background: rgba(255,216,77,0.09); border-color: var(--pulse); }
 
   .av {
     position: relative;
@@ -345,9 +345,9 @@
   #app-root .day.st-done {
     color: #171600; font-weight: 700;
     background-color: var(--pulse);
-    background-image: linear-gradient(168deg, #f1e5bc 0%, var(--pulse) 52%, var(--pulse-deep) 100%);
+    background-image: linear-gradient(168deg, var(--pulse) 0%, var(--pulse) 52%, var(--pulse-deep) 100%);
     border-color: rgba(255,255,255,0.4);
-    box-shadow: 0 3px 8px rgba(231,215,155,0.12), 0 0 12px rgba(231,215,155,0.08);
+    box-shadow: 0 3px 8px rgba(255,216,77,0.12), 0 0 12px rgba(255,216,77,0.08);
     text-shadow: none;
   }
   #app-root .day.st-miss {
@@ -367,12 +367,12 @@
   #app-root .day.st-plan {
     color: var(--pulse-text); font-weight: 700;
     background-color: transparent;
-    background-image: linear-gradient(168deg, rgba(231,215,155,0.12) 0%, rgba(231,215,155,0.04) 100%);
+    background-image: linear-gradient(168deg, rgba(255,216,77,0.12) 0%, rgba(255,216,77,0.04) 100%);
     border: 1.5px solid var(--pulse);
   }
   #app-root .day.is-today.st-plan { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring); }
   #app-root .day.is-today         { box-shadow: 0 0 0 2.5px var(--ring); }
-  #app-root .day.is-today.st-done { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring), 0 0 12px rgba(231,215,155,0.16); }
+  #app-root .day.is-today.st-done { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring), 0 0 12px rgba(255,216,77,0.16); }
   #app-root .day.is-today.st-miss { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring); }
   #app-root .day.is-today.st-rest { box-shadow: 0 0 0 2px var(--ring-gap), 0 0 0 4px var(--ring); }
   #app-root .day.is-picked        { transform: scale(1.08); z-index: 3; }
@@ -383,7 +383,7 @@
   .stat.g b { color: var(--pulse-text); }
   .stat.r b { color: var(--miss-text); }
   .bar { margin-left: auto; width: 76px; height: 6px; border-radius: 999px; background: var(--soft-2); overflow: hidden; }
-  .bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f1e5bc, var(--pulse-deep)); transition: width .5s cubic-bezier(.2,.8,.2,1); }
+  .bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--pulse), var(--pulse-deep)); transition: width .5s cubic-bezier(.2,.8,.2,1); }
 
   /* ---------- day chooser ---------- */
   .chooser-veil { position: fixed; inset: 0; z-index: 44; display: none; background: rgba(0,0,0,0.06); }
@@ -409,9 +409,9 @@
   .opt:active { transform: scale(0.98); }
   .opt .tick { margin-left: auto; opacity: 0; }
   .opt.is-cur .tick { opacity: 1; }
-  #app-root .opt-yes { color: #171600; background: linear-gradient(180deg, #f1e5bc, var(--pulse-deep)); box-shadow: 0 4px 12px rgba(231,215,155,0.12); }
+  #app-root .opt-yes { color: #171600; background: linear-gradient(180deg, var(--pulse), var(--pulse-deep)); box-shadow: 0 4px 12px rgba(255,216,77,0.12); }
   .opt-no  { background: linear-gradient(180deg, #ff6060, #e02424); box-shadow: 0 6px 16px rgba(224,36,36,0.3); }
-  .opt-plan { color: var(--pulse-text); background: rgba(231,215,155,0.09); box-shadow: inset 0 0 0 1.5px var(--pulse); }
+  .opt-plan { color: var(--pulse-text); background: rgba(255,216,77,0.09); box-shadow: inset 0 0 0 1.5px var(--pulse); }
   .opt-row { display: flex; gap: 7px; }
   .opt-row button {
     flex: 1; height: 38px; border-radius: 12px; font-size: 12.5px; font-weight: 620;
@@ -435,7 +435,7 @@
   .lg-done { background: var(--pulse); }
   .lg-miss { background: #ff3b3b; }
   .lg-rest { background: var(--rest-b); }
-  .lg-plan { background: rgba(231,215,155,0.12); border: 2px solid var(--pulse); }
+  .lg-plan { background: rgba(255,216,77,0.12); border: 2px solid var(--pulse); }
   .lg-today { background: var(--day-pending-bg); box-shadow: 0 0 0 2px var(--ring); }
 
   /* ---------- modal ---------- */
@@ -722,7 +722,7 @@
   paintPrivacyButton();
 
   var ACCENTS = [
-    '#ff5f6d,#ffc371', '#00d2ff,#3a7bd5', '#a86bff,#f857a6', '#f1e5bc,#c9b77c', '#ff8a3d,#ff5f6d', '#4b5bff,#9a4bff',
+    '#ff5f6d,#ffc371', '#00d2ff,#3a7bd5', '#a86bff,#f857a6', '#ffd84d,#f2cb3f', '#ff8a3d,#ff5f6d', '#4b5bff,#9a4bff',
     '#ffe600,#ffb800', '#fff7a3,#f4ce38', '#ffcc80,#e87924', '#ff9f43,#c95812', '#ff6b6b,#d63031', '#ff455c,#b41438',
     '#ff91b6,#e84393', '#f7a8ef,#ad36b6', '#de7aff,#8e44ad', '#c7b0ff,#7d5fff', '#9788ff,#4834d4', '#6c8cff,#2c4bb8',
     '#67b7ff,#1964b5', '#91d8ff,#3386b7', '#b8c9ec,#657fa9', '#d9dde7,#848b9c', '#9ea6b8,#50596e', '#f3c9ad,#aa7755'
@@ -787,7 +787,7 @@
   function avStyle(ch) {
     if (ch.avatar) return 'background-image:url(' + ch.avatar + ')';
     // Display legacy green avatars in the new palette without rewriting saved data.
-    var a = (['#00dd76,#0aa9a0', '#fff34d,#e8bd00'].indexOf(ch.accent) !== -1 ? '#f1e5bc,#c9b77c' : ch.accent).split(',');
+    var a = (['#00dd76,#0aa9a0', '#fff34d,#e8bd00', '#f1e5bc,#c9b77c'].indexOf(ch.accent) !== -1 ? '#ffd84d,#f2cb3f' : ch.accent).split(',');
     return 'background-image:linear-gradient(140deg, ' + a[0] + ', ' + a[1] + ')';
   }
   function initials(ch) { return ch.avatar ? '' : (ch.name.trim()[0] || '?'); }
