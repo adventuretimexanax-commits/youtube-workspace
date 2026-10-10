@@ -1112,12 +1112,13 @@
     if (!Array.isArray(rows) || rows.length > 1000) throw new Error('Некорректная таблица');
     return rows.map(function (row) {
       var clean = {};
-      ['email', 'name', 'subscription', 'proxy'].forEach(function (field) {
+      ['email', 'linkedEmail', 'name', 'subscription', 'proxy'].forEach(function (field) {
         var value = row && typeof row[field] === 'string' ? row[field].trim() : '';
         if (value.length > 300) throw new Error('Ячейка слишком длинная');
         clean[field] = value;
       });
       if (clean.email && !/^[^\s@]+@gmail\.com$/i.test(clean.email)) throw new Error('Укажите Gmail: name@gmail.com');
+      if (clean.linkedEmail && !/^[^\s@]+@gmail\.com$/i.test(clean.linkedEmail)) throw new Error('В «Связь с» укажите Gmail: name@gmail.com');
       if (clean.proxy) {
         // Endpoint only. Reject credentials, tokens, paths and query strings.
         if (!/^(?:(?:https?|socks4|socks5):\/\/)?(?:[a-z0-9.-]+|\[[a-f0-9:]+\]):\d{1,5}$/i.test(clean.proxy)) {
@@ -1139,19 +1140,19 @@
       '<h3 id="dbTitle">БДшка</h3><p class="warn">Локальная таблица в этом браузере. Не синхронизируется и не входит в резервную копию календаря.</p>' +
       '<p class="warn">Не вводите секреты: пароли, данные входа и ключи 2FA храните в менеджере паролей. Глазик скрывает почту и адрес прокси только на экране, не шифрует их.</p>' +
       '<div class="db-tools"><button class="btn-primary" id="dbAdd">+ Строка</button><button class="btn-ghost" id="dbEye" aria-label="Показать почты и прокси" aria-pressed="false">' + EYE + '</button></div>' +
-      '<div class="db-scroll"><table class="db-table"><thead><tr><th scope="col">Gmail</th><th scope="col">Название</th><th scope="col">Подписка</th><th scope="col">Пароль / вход / 2FA</th><th scope="col">Прокси (без пароля)</th><th scope="col">Действие</th></tr></thead><tbody id="dbRows"></tbody></table></div>' +
+      '<div class="db-scroll"><table class="db-table"><thead><tr><th scope="col">Gmail</th><th scope="col">Связь с</th><th scope="col">Название</th><th scope="col">Подписка</th><th scope="col">Пароль / вход / 2FA</th><th scope="col">Прокси (без пароля)</th><th scope="col">Действие</th></tr></thead><tbody id="dbRows"></tbody></table></div>' +
       '<div class="db-status" id="dbStatus" role="status" aria-live="polite"></div><div class="sheet-actions"><button class="b-cancel" id="dbCancel">Отмена</button><button class="b-save" id="dbSave">Сохранить</button></div></div>';
     function paintRows() {
       $('dbRows').innerHTML = rows.map(function (row, i) {
-        return '<tr>' + ['email', 'name', 'subscription'].map(function (field) {
+        return '<tr>' + ['email', 'linkedEmail', 'name', 'subscription'].map(function (field) {
           return cell(field, row[field], i);
         }).join('') + '<td class="db-locked">Не храним — нет защищённого хранилища</td>' + cell('proxy', row.proxy, i) +
           '<td><button class="btn-ghost" data-db-delete="' + i + '" aria-label="Удалить строку ' + (i + 1) + '">×</button></td></tr>';
       }).join('');
     }
     function cell(field, value, i) {
-      var labels = {email:'Gmail', name:'Название', subscription:'Подписка', proxy:'Прокси'};
-      var hidden = !shown && (field === 'email' || field === 'proxy');
+      var labels = {email:'Gmail', linkedEmail:'Связь с', name:'Название', subscription:'Подписка', proxy:'Прокси'};
+      var hidden = !shown && (field === 'email' || field === 'linkedEmail' || field === 'proxy');
       return '<td><input type="' + (hidden ? 'password' : 'text') + '" data-db-field="' + field + '" data-db-row="' + i + '" aria-label="' + labels[field] + ', строка ' + (i + 1) + '" value="' + esc(value || '') + '" maxlength="300" autocomplete="off" spellcheck="false"></td>';
     }
     $('dbRows').oninput = function (e) {
@@ -1167,13 +1168,13 @@
     };
     $('dbAdd').onclick = function () {
       if (rows.length >= 1000) { $('dbStatus').textContent = 'Максимум 1000 строк'; return; }
-      rows.push({email:'', name:'', subscription:'', proxy:''}); paintRows();
+      rows.push({email:'', linkedEmail:'', name:'', subscription:'', proxy:''}); paintRows();
       $('dbRows').lastElementChild.querySelector('input').focus();
       $('dbStatus').textContent = 'Есть несохранённые изменения';
     };
     $('dbEye').onclick = function () {
       shown = !shown;
-      $('dbRows').querySelectorAll('[data-db-field="email"], [data-db-field="proxy"]').forEach(function (input) { input.type = shown ? 'text' : 'password'; });
+      $('dbRows').querySelectorAll('[data-db-field="email"], [data-db-field="linkedEmail"], [data-db-field="proxy"]').forEach(function (input) { input.type = shown ? 'text' : 'password'; });
       $('dbEye').innerHTML = shown ? EYE_OFF : EYE;
       $('dbEye').setAttribute('aria-label', shown ? 'Скрыть почты и прокси' : 'Показать почты и прокси');
       $('dbEye').setAttribute('aria-pressed', String(shown));

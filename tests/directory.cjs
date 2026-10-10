@@ -19,8 +19,10 @@ const context = vm.createContext({URL,Promise,console,setTimeout(){return 1;},cl
 vm.runInContext(scripts.at(-1).replace(/\}\)\(\);\s*$/, 'globalThis.api = { directoryRows, openDirectory }; })();'), context);
 const normalize = rows => JSON.parse(JSON.stringify(context.api.directoryRows(rows)));
 const original = data.get('uploadtracker:v1');
-const row = {email:'test@gmail.com',name:'Канал',subscription:'Plus',proxy:'socks5://127.0.0.1:1080',password:'discard',twofa:'discard'};
-assert.deepEqual(normalize([row]), [{email:row.email,name:row.name,subscription:row.subscription,proxy:row.proxy}]);
+const row = {email:'test@gmail.com',linkedEmail:'linked@gmail.com',name:'Канал',subscription:'Plus',proxy:'socks5://127.0.0.1:1080',password:'discard',twofa:'discard'};
+assert.deepEqual(normalize([row]), [{email:row.email,linkedEmail:row.linkedEmail,name:row.name,subscription:row.subscription,proxy:row.proxy}]);
+assert.equal(normalize([{email:'old@gmail.com'}])[0].linkedEmail,'','old rows stay compatible');
+assert.throws(()=>normalize([{linkedEmail:'linked@example.com'}]));
 for (const proxy of ['user:pass@host:80','https://user:pass@host:80','host:80/token','host:80?key=x','host:0','host:65536','host:80\npassword']) {
   assert.throws(()=>normalize([{proxy}]), undefined, proxy);
 }
@@ -36,6 +38,7 @@ assert.equal(data.get('uploadtracker:v1'),original,'calendar data untouched');
 data.set('uploadtracker:directory:v1',JSON.stringify([row]));
 context.api.openDirectory();
 assert.match(elements.get('dbRows').innerHTML,/type="password" data-db-field="email"/);
+assert.match(elements.get('dbRows').innerHTML,/type="password" data-db-field="linkedEmail"/);
 assert.match(elements.get('dbRows').innerHTML,/type="password" data-db-field="proxy"/);
 assert.doesNotMatch(elements.get('dbRows').innerHTML,/value="discard"/);
 elements.get('dbSave').onclick();
