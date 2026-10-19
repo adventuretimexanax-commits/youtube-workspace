@@ -1,0 +1,50 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+scripts.forEach(s=>new vm.Script(s));
+const elements=new Map(),data=new Map();
+function element(){return {style:{},classList:{add(){},remove(){},toggle(){}},setAttribute(){},getAttribute(){return 'dark';},addEventListener(){},querySelectorAll(){return [];},focus(){},innerHTML:'',textContent:''};}
+const context=vm.createContext({URL,Promise,console,setTimeout(){return 1;},clearTimeout(){},
+ window:{addEventListener(){}},localStorage:{getItem(k){return data.get(k)||null;},setItem(k,v){data.set(k,v);},removeItem(k){data.delete(k);}},
+ document:{documentElement:element(),getElementById(id){if(!elements.has(id))elements.set(id,element());return elements.get(id);},addEventListener(){}}});
+vm.runInContext(scripts.at(-1).replace(/\}\)\(\);\s*$/,
+ 'globalThis.api={state,stateOf,monthStats,streakOf,toggleFreeze,frozenOn,isFrozen,render,shift,TODAY};})();'),context);
+const a=context.api,today=a.TODAY,yesterday=a.shift(today,-1),twoDays=a.shift(today,-2);
+const ch={id:'test',name:'Test',accent:'#ffd84d,#f2cb3f',start:twoDays};
+a.state.channels.push(ch);a.state.marks.test={[twoDays]:'done',[yesterday]:'miss',[today]:'plan'};
+assert.equal(a.stateOf(ch,yesterday),'miss','old channels unaffected');
+const marks=JSON.stringify(a.state.marks);
+a.toggleFreeze(ch);
+assert.equal(a.isFrozen(ch),true);
+assert.equal(a.stateOf(ch,today),'frozen');
+assert.equal(a.stateOf(ch,a.shift(today,20)),'frozen');
+assert.equal(a.stateOf(ch,yesterday),'miss','historical misses retained');
+assert.equal(JSON.stringify(a.state.marks),marks,'freeze never rewrites marks');
+assert.match(elements.get('grid').innerHTML,/is-frozen/);
+assert.match(elements.get('grid').innerHTML,/Разморозить канал/);
+assert.match(elements.get('grid').innerHTML,/ disabled/);
+assert.ok(!elements.get('grid').innerHTML.includes('streakline hot'));
+const restored=JSON.parse(JSON.stringify(ch));
+assert.equal(a.isFrozen(restored),true,'JSON backup/reload roundtrip');
+a.toggleFreeze(ch);
+assert.equal(a.isFrozen(ch),false);
+assert.equal(a.stateOf(ch,today),'plan','same-day resume restores plan');
+assert.equal(ch.freezePeriods.length,0);
+ch.freezePeriods=[{start:twoDays,end:yesterday}];
+a.state.marks.test={[a.shift(twoDays,-1)]:'done',[twoDays]:'miss',[yesterday]:'plan',[today]:'done'};
+assert.equal(a.stateOf(ch,twoDays),'frozen','explicit miss during pause excluded');
+assert.equal(a.stateOf(ch,yesterday),'frozen','expired plan during pause excluded');
+assert.equal(a.streakOf(ch),2,'pause bridges actual uploads without adding fake uploads');
+const d=new Date();assert.equal(a.monthStats(ch,d.getFullYear(),d.getMonth()).miss,0);
+ch.freezePeriods=[{start:yesterday,end:null}];
+a.toggleFreeze(ch);
+assert.equal(ch.freezePeriods[0].end,yesterday,'resume ends pause yesterday');
+assert.equal(a.stateOf(ch,yesterday),'frozen','history of pause remains after resume');
+assert.equal(a.isFrozen(ch),false);
+assert.equal(a.stateOf(ch,today),'done');
+assert.equal(a.stateOf({start:twoDays,freezePeriods:[]},yesterday),'miss');
+assert.match(html,/\.card\.is-frozen \.workspace \{ filter: grayscale\(1\)/);
+assert.match(html,/CSS ice, no downloaded textures or animation/);
+assert.match(html,/pointer-events: none; border-radius: inherit; z-index: -1/);
+assert.match(html,/\.card\.is-frozen \.day \{ box-shadow: none/);
+console.log('PASS: freeze/resume, persisted periods, no missed days during pause, actual uploads/streak/history preserved, muted card');

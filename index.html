@@ -307,6 +307,47 @@
     animation: rise .5s cubic-bezier(.2,.8,.2,1) backwards;
   }
   .card:hover { box-shadow: var(--shadow-hover); }
+  #app-root .card.is-frozen {
+    position: relative; isolation: isolate; overflow: hidden;
+    background: linear-gradient(145deg, rgba(166,224,250,.15), rgba(22,45,63,.12) 48%, rgba(138,203,235,.08)), var(--glass);
+    border-color: rgba(159,220,250,.38);
+    box-shadow: inset 0 0 26px rgba(172,226,255,.07), 0 0 19px rgba(100,188,239,.09);
+  }
+  #app-root .card.is-frozen:hover { box-shadow: inset 0 0 26px rgba(172,226,255,.09), 0 0 23px rgba(100,188,239,.14); }
+  /* CSS ice, no downloaded textures or animation. Frost stays at the edges. */
+  #app-root .card.is-frozen::before,
+  #app-root .card.is-frozen::after { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; z-index: -1; }
+  #app-root .card.is-frozen::before {
+    background: radial-gradient(ellipse at 0 0, rgba(209,243,255,.25), transparent 38%),
+      radial-gradient(ellipse at 100% 100%, rgba(151,217,253,.17), transparent 40%),
+      repeating-linear-gradient(124deg, transparent 0 33px, rgba(207,239,255,.035) 34px, transparent 35px 65px);
+    box-shadow: inset 0 1px 0 rgba(232,251,255,.42), inset 1px 0 0 rgba(206,242,255,.22);
+  }
+  #app-root .card.is-frozen::after {
+    background: linear-gradient(137deg, transparent 0 14%, rgba(200,243,255,.65) 14.15%, transparent 14.4%),
+      linear-gradient(35deg, transparent 0 9%, rgba(145,219,255,.44) 9.15%, transparent 9.4%),
+      linear-gradient(112deg, transparent 0 22%, rgba(207,245,255,.37) 22.15%, transparent 22.4%),
+      linear-gradient(151deg, transparent 0 84%, rgba(178,233,255,.5) 84.15%, transparent 84.4%);
+    mask-image: linear-gradient(90deg, #000, transparent 30% 70%, #000);
+    opacity: .65;
+  }
+  #app-root .card.is-frozen .av,
+  #app-root .card.is-frozen .days,
+  #app-root .card.is-frozen .card-foot,
+  #app-root .card.is-frozen .workspace { filter: grayscale(1); }
+  #app-root .card.is-frozen .streakline { color: #99c6dd; }
+  #app-root .card.is-frozen .card-id b { color: var(--ink-2); }
+  #app-root .card.is-frozen .day { box-shadow: none; animation: none; }
+  #app-root .card.is-frozen .day.is-today { outline: 1px solid var(--ink-3); outline-offset: 1px; }
+  #app-root .card.is-frozen .day.st-done,
+  #app-root .card.is-frozen .day.st-plan { background: var(--soft); color: var(--ink-2); border-color: var(--input-bd); }
+  #app-root .day.st-frozen { background: var(--soft); color: var(--ink-3); border: 1px dashed var(--input-bd); box-shadow: none; }
+  #app-root .freeze-control { margin-top: 12px; padding: 7px 11px; border: 1px solid var(--input-bd); border-radius: 10px; color: var(--ink-3); font-size: 12px; }
+  #app-root .freeze-control:hover { background: var(--soft); color: var(--ink); }
+  #app-root .card.is-frozen .freeze-control { color: #b5dcef; border-color: rgba(157,220,252,.38); background: rgba(107,187,231,.1); box-shadow: inset 0 1px 0 rgba(224,247,255,.15); }
+  #app-root .card.is-frozen .freeze-control:hover { background: rgba(107,187,231,.18); }
+  [data-theme="light"] #app-root .card.is-frozen .streakline,
+  [data-theme="light"] #app-root .card.is-frozen .freeze-control { color: #315e77; }
   @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }
 
   .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
@@ -811,8 +852,32 @@
   }
   function markOf(ch, dk) { return (state.marks[ch.id] || {})[dk] || null; }
 
+  function frozenOn(ch, dk) {
+    return (ch.freezePeriods || []).some(function (p) {
+      return p && p.start && dk >= p.start && (!p.end || dk <= p.end);
+    });
+  }
+  function isFrozen(ch) { return frozenOn(ch, TODAY); }
+  function toggleFreeze(ch) {
+    if (!Array.isArray(ch.freezePeriods)) ch.freezePeriods = [];
+    if (isFrozen(ch)) {
+      ch.freezePeriods = ch.freezePeriods.filter(function (p) {
+        if (p.start <= TODAY && (!p.end || p.end >= TODAY)) {
+          // Resume today; no artificial missed day for a same-day toggle.
+          if (p.start === TODAY) return false;
+          p.end = shift(TODAY, -1);
+        }
+        return true;
+      });
+    } else ch.freezePeriods.push({ start: TODAY, end: null });
+    save(); closeChooser(); render();
+    toast(isFrozen(ch) ? 'Канал заморожен — дни паузы не считаются пропусками' : 'Канал снова активен');
+  }
+
   function stateOf(ch, dk) {
     var m = markOf(ch, dk);
+    // Keep actual uploads/rest history; ignore plans and misses during pauses.
+    if (frozenOn(ch, dk) && m !== 'done' && m !== 'rest') return 'frozen';
     if (m === 'plan') {
       /* план в силе, пока день не прошёл; прошедший неподтверждённый план = пропуск */
       return dk < TODAY ? 'miss' : 'plan';
@@ -838,7 +903,7 @@
     while (guard++ < 3000) {
       var m = markOf(ch, cur);
       if (m === 'done') n++;
-      else if (m === 'rest') {}
+      else if (m === 'rest' || frozenOn(ch, cur)) {}
       else break;
       cur = shift(cur, -1);
     }
@@ -1020,14 +1085,14 @@
         var dk = y + '-' + pad(m + 1) + '-' + pad(d);
         var s = stateOf(ch, dk);
         var cls = 'day st-' + s + ' tap' + (dk === TODAY ? ' is-today' : '');
-        cells += '<button class="' + cls + '" data-ch="' + ch.id + '" data-d="' + dk + '">' + d + '</button>';
+        cells += '<button class="' + cls + '" data-ch="' + ch.id + '" data-d="' + dk + '"' + (isFrozen(ch) ? ' disabled' : '') + '>' + d + '</button>';
       }
-      return '<article class="card" style="animation-delay:' + (i * 45) + 'ms">' +
+      return '<article class="card' + (isFrozen(ch) ? ' is-frozen' : '') + '" style="animation-delay:' + (i * 45) + 'ms">' +
         '<div class="card-head">' +
           avBox(ch, '') +
           '<div class="card-id"><b>' + nameHTML(ch) + '</b>' +
-            '<div class="streakline ' + (sk > 0 ? 'hot' : '') + '">' + (sk > 0 ? FLAME : '') +
-            (sk > 0 ? 'Серия: ' + sk + ' ' + plural(sk, ['день','дня','дней']) : 'Серии пока нет') + '</div>' +
+            '<div class="streakline ' + (!isFrozen(ch) && sk > 0 ? 'hot' : '') + '">' + (!isFrozen(ch) && sk > 0 ? FLAME : '') +
+            (isFrozen(ch) ? '❄ На паузе · история сохранена' : sk > 0 ? 'Серия: ' + sk + ' ' + plural(sk, ['день','дня','дней']) : 'Серии пока нет') + '</div>' +
           '</div>' +
           '<div class="card-menu">' +
             '<button class="iconbtn" data-edit="' + ch.id + '" aria-label="Изменить">' +
@@ -1043,7 +1108,9 @@
           '<div class="stat r"><b>' + st.miss + '</b> ' + plural(st.miss, ['пропуск','пропуска','пропусков']) + '</div>' +
           (st.ahead ? '<div class="stat g"><b>' + st.ahead + '</b> в плане</div>' : '') +
           '<div class="bar" title="' + st.pct + '%"><i style="width:' + st.pct + '%"></i></div>' +
-        '</div>' + workspaceHTML(ch) + '</article>';
+        '</div>' + workspaceHTML(ch) +
+        '<button class="freeze-control" data-freeze="' + ch.id + '" aria-pressed="' + isFrozen(ch) + '">' +
+        (isFrozen(ch) ? 'Разморозить канал' : '❄ Заморозить канал') + '</button></article>';
     }).join('');
   }
 
@@ -1066,7 +1133,7 @@
   function openChooser(cell) {
     var ch = null;
     for (var i = 0; i < state.channels.length; i++) if (state.channels[i].id === cell.dataset.ch) ch = state.channels[i];
-    if (!ch) return;
+    if (!ch || isFrozen(ch)) return;
     var dk = cell.dataset.d;
     var cur = markOf(ch, dk), d = parse(dk), box = $('chooser');
     var TICK = '<svg class="tick" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>';
@@ -1130,6 +1197,13 @@
 
   root.addEventListener('click', function (e) {
     if (e.target.closest('#chooser')) return;
+
+    var freeze = e.target.closest('[data-freeze]');
+    if (freeze) {
+      var channel = state.channels.find(function (ch) { return ch.id === freeze.getAttribute('data-freeze'); });
+      if (channel) toggleFreeze(channel);
+      return;
+    }
 
     var day = e.target.closest('[data-d]');
     if (day) { openChooser(day); return; }
