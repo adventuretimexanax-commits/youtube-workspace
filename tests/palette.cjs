@@ -23,6 +23,10 @@ for (const green of ['#00d76f','#00b25b','#1ceb85','#2ae893','#00bd6d','0,215,11
   assert.ok(!css.includes(green),`old green remains: ${green}`);
 }
 assert.match(html,/t = 'dark'/);
+assert.match(html,/<html lang="ru" data-theme="dark">/);
+assert.ok(!html.includes('id="themeBtn"'),'no light/dark switch');
+assert.ok(!html.includes("localStorage.getItem('uploadtracker:theme')"),'old light preference ignored');
+assert.ok(!html.includes('store.get(THEME_KEY)'),'cloud light preference cannot override dark');
 assert.match(html,/var KEY = 'uploadtracker:v1'/);
 assert.match(html,/var DB_KEY = 'uploadtracker:directory:v1'/);
 assert.match(html,/indexOf\(ch.accent\) !== -1 \? '#ffd84d,#f2cb3f'/);
