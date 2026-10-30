@@ -636,7 +636,7 @@
   .workspace [hidden] { display: none !important; }
   .workspace-status:empty { display: none; }
 </style>
-<link rel="stylesheet" href="workspace-layout.css?v=moon-20261031">
+<link rel="stylesheet" href="workspace-layout.css?v=black-order-20261031">
 </head>
 <body>
 <div id="app-root">
@@ -702,6 +702,7 @@
 <div class="menu" id="menu"></div>
 <div class="toast" id="toast"></div>
 
+<script src="channel-order.js"></script>
 <script>
 (function () {
   var root = document.getElementById('app-root');
@@ -1234,17 +1235,89 @@
     });
     $('viewHint').textContent = layout.mode === 'focus' ? 'Один канал · переключение слева' : 'Все каналы перед глазами';
   }
+  var orderSaving = false, draggedChannel = null;
   function railHTML() {
     return [false, true].map(function (paused) {
       var channels = state.channels.filter(function (ch) { return isFrozen(ch) === paused; });
       if (!channels.length) return '';
-      return '<div class="rail-group-label">' + (paused ? 'На паузе' : 'Активные') + ' · ' + channels.length + '</div>' + channels.map(function (ch) {
+      return '<div class="rail-group-label">' + (paused ? 'На паузе' : 'Активные') + ' · ' + channels.length + '</div>' + channels.map(function (ch, i) {
         var st = monthStats(ch, view.getFullYear(), view.getMonth());
-        return '<button class="channel-nav" data-open-channel="' + esc(ch.id) + '" aria-pressed="' + (ch.id === layout.selected) + '">' + avBox(ch, '') +
-          '<span class="channel-nav-text"><b>' + nameHTML(ch) + '</b><small>' + (paused ? '❄ На паузе' : st.done + ' выложено · ' + st.miss + ' пропусков') + '</small></span></button>';
+        return '<div class="channel-row" data-order-row="' + esc(ch.id) + '">' +
+          '<button type="button" class="order-grip" draggable="true" data-drag-channel="' + esc(ch.id) + '" aria-label="Перетащить канал" title="Перетащить канал"' + (orderSaving ? ' disabled' : '') + '>⠿</button>' +
+          '<button class="channel-nav" data-open-channel="' + esc(ch.id) + '" aria-pressed="' + (ch.id === layout.selected) + '">' + avBox(ch, '') +
+          '<span class="channel-nav-text"><b>' + nameHTML(ch) + '</b><small>' + (paused ? '❄ На паузе' : st.done + ' выложено · ' + st.miss + ' пропусков') + '</small></span></button>' +
+          '<div class="order-arrows"><button type="button" data-move-channel="' + esc(ch.id) + '" data-direction="-1" aria-label="Поднять канал" title="Поднять (Alt + ↑)"' + (orderSaving || i === 0 ? ' disabled' : '') + '>↑</button>' +
+          '<button type="button" data-move-channel="' + esc(ch.id) + '" data-direction="1" aria-label="Опустить канал" title="Опустить (Alt + ↓)"' + (orderSaving || i === channels.length - 1 ? ' disabled' : '') + '>↓</button></div></div>';
       }).join('');
     }).join('');
   }
+  function orderRail() { var rail = root.querySelector('.channel-rail'); if (rail) rail.innerHTML = railHTML(); }
+  function focusChannelControl(id, direction) {
+    root.querySelectorAll('[data-move-channel]').forEach(function (b) {
+      if (b.getAttribute('data-move-channel') === id && b.getAttribute('data-direction') === String(direction) && !b.disabled) b.focus();
+    });
+  }
+  function persistChannelOrder(sourceId, targetId, after, direction) {
+    if (orderSaving) return Promise.resolve(false);
+    var originalIds = state.channels.map(function (c) { return c.id; });
+    var next = reorderChannelGroup(state.channels, sourceId, targetId, after, isFrozen);
+    if (next === state.channels || next.every(function (c, i) { return c.id === originalIds[i]; })) return Promise.resolve(false);
+    captureWorkspaceDrafts(); clearTimeout(saveTimer);
+    state.channels = next; orderSaving = true; render();
+    return store.set(KEY, JSON.stringify({channels: state.channels, marks: state.marks})).then(function () {
+      toast('Порядок каналов сохранён'); return true;
+    }).catch(function () {
+      // Restore order only, keeping current channel objects and calendar marks intact.
+      state.channels.sort(function (a, b) { return originalIds.indexOf(a.id) - originalIds.indexOf(b.id); });
+      render(); toast('Не удалось сохранить порядок. Перемещение отменено.'); return false;
+    }).finally(function () { orderSaving = false; orderRail(); focusChannelControl(sourceId, direction); });
+  }
+  function moveChannel(id, direction) {
+    var ch = state.channels.find(function (c) { return c.id === id; });
+    if (!ch) return;
+    var group = state.channels.filter(function (c) { return isFrozen(c) === isFrozen(ch); });
+    var index = group.indexOf(ch), target = group[index + direction];
+    if (target) return persistChannelOrder(id, target.id, direction > 0, direction);
+  }
+  root.addEventListener('click', function (e) {
+    var control = e.target.closest('[data-move-channel]');
+    if (control) moveChannel(control.getAttribute('data-move-channel'), Number(control.getAttribute('data-direction')));
+  });
+  root.addEventListener('keydown', function (e) {
+    var control = e.target.closest('[data-move-channel]');
+    if (control && e.altKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault(); moveChannel(control.getAttribute('data-move-channel'), e.key === 'ArrowDown' ? 1 : -1);
+    }
+  });
+  function clearDropTargets() {
+    root.querySelectorAll('.channel-row').forEach(function (row) { row.classList.remove('drop-before', 'drop-after'); });
+  }
+  root.addEventListener('dragstart', function (e) {
+    var grip = e.target.closest('[data-drag-channel]');
+    if (!grip || orderSaving) { e.preventDefault(); return; }
+    draggedChannel = grip.getAttribute('data-drag-channel');
+    e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', draggedChannel);
+    grip.closest('.channel-row').classList.add('is-dragging');
+  });
+  root.addEventListener('dragover', function (e) {
+    var row = e.target.closest('[data-order-row]');
+    if (!draggedChannel || !row) return;
+    var source = state.channels.find(function(c){return c.id === draggedChannel;}), target = state.channels.find(function(c){return c.id === row.getAttribute('data-order-row');});
+    if (!source || !target || source === target || isFrozen(source) !== isFrozen(target)) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move'; clearDropTargets();
+    var rect = row.getBoundingClientRect(); row.classList.add(e.clientY > rect.top + rect.height/2 ? 'drop-after' : 'drop-before');
+  });
+  root.addEventListener('drop', function (e) {
+    var row = e.target.closest('[data-order-row]');
+    if (!draggedChannel || !row) return;
+    e.preventDefault(); var id = draggedChannel, target = row.getAttribute('data-order-row');
+    var rect = row.getBoundingClientRect(), after = e.clientY > rect.top + rect.height/2;
+    draggedChannel = null; clearDropTargets(); persistChannelOrder(id, target, after, after ? 1 : -1);
+  });
+  root.addEventListener('dragend', function () {
+    draggedChannel = null; clearDropTargets();
+    root.querySelectorAll('.is-dragging').forEach(function (row) { row.classList.remove('is-dragging'); });
+  });
   function selectChannel(id) {
     if (!state.channels.some(function (ch) { return ch.id === id; })) return;
     closeChooser(); layout.selected = id; layout.mode = 'focus'; rememberLayout(); render();
@@ -1272,6 +1345,7 @@
   root.addEventListener('keydown', function (e) {
     var nav = e.target.closest('[data-open-channel]');
     if (!nav || layout.mode !== 'focus' || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+    if (e.altKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); moveChannel(nav.getAttribute('data-open-channel'), e.key === 'ArrowDown' ? 1 : -1); return; }
     var ordered = state.channels.filter(function (ch) { return !isFrozen(ch); }).concat(state.channels.filter(isFrozen));
     var index = ordered.findIndex(function (ch) { return ch.id === layout.selected; });
     index = e.key === 'Home' ? 0 : e.key === 'End' ? ordered.length - 1 : (index + (e.key === 'ArrowDown' ? 1 : -1) + ordered.length) % ordered.length;

@@ -89,8 +89,37 @@ try:
     assert page.locator('#space-stars').evaluate('(e)=>e.width*e.height') <= 3010000
     assert page.locator('.space-photo').evaluate('(e)=>getComputedStyle(e).backgroundImage').find('moon-background.png') >= 0
     assert page.locator('[data-card]').first.evaluate('(e)=>getComputedStyle(e).backdropFilter') == 'none'
+    # Order is persisted in the existing channel array; all fields/marks remain exact.
+    page.locator('[data-open-channel="0"]').click()
+    before_order = page.evaluate('JSON.parse(localStorage.getItem("uploadtracker:v1"))')
+    page.locator('[data-move-channel="0"][data-direction="1"]').click()
+    page.wait_for_function('JSON.parse(localStorage.getItem("uploadtracker:v1")).channels[0].id === "1"')
+    reordered = page.evaluate('JSON.parse(localStorage.getItem("uploadtracker:v1"))')
+    assert reordered['marks'] == before_order['marks']
+    assert {c['id']:c for c in reordered['channels']} == {c['id']:c for c in before_order['channels']}
+    page.reload()
+    assert page.locator('.channel-nav').first.get_attribute('data-open-channel') == '1'
+    assert page.locator('[data-move-channel="1"][data-direction="-1"]').is_disabled()
+    page.locator('[data-drag-channel="8"]').drag_to(page.locator('[data-order-row="1"]'), target_position={'x':60, 'y':2})
+    page.wait_for_function('JSON.parse(localStorage.getItem("uploadtracker:v1")).channels[0].id === "8"')
+    page.locator('[data-open-channel="8"]').focus(); page.keyboard.press('Alt+ArrowDown')
+    page.wait_for_function('JSON.parse(localStorage.getItem("uploadtracker:v1")).channels[0].id === "1"')
+    # Force a real storage failure. UI reverts order; no calendar changes are discarded.
+    stable = page.evaluate('localStorage.getItem("uploadtracker:v1")')
+    page.evaluate("""() => { window.originalStorageSet=Storage.prototype.setItem;
+        Storage.prototype.setItem=function(k,v){if(k==='uploadtracker:v1')throw new Error('quota test');return window.originalStorageSet.call(this,k,v);}; }""")
+    page.locator('[data-move-channel="0"][data-direction="1"]').click()
+    page.wait_for_function('document.getElementById("toast").textContent.includes("Перемещение отменено")')
+    assert page.evaluate('localStorage.getItem("uploadtracker:v1")') == stable
+    assert page.locator('.channel-nav').first.get_attribute('data-open-channel') == '1'
+    page.evaluate('() => { Storage.prototype.setItem=window.originalStorageSet; }')
+    page.locator('[data-layout="overview"]').click()
+    assert page.locator('[data-card]').first.get_attribute('data-card') == '1'
+    # Neutral panels and an unblurred owner-provided background.
+    assert page.locator('.space-photo').evaluate('(e)=>getComputedStyle(e).filter') == 'none'
+    assert '#222222' in page.locator('[data-card]').first.evaluate('(e)=>getComputedStyle(e).backgroundImage') or '34, 34, 34' in page.locator('[data-card]').first.evaluate('(e)=>getComputedStyle(e).backgroundImage')
     assert not errors, errors
     browser.close()
-    print('PASS: nine channels, isolated day update, data preservation, drafts/save, reload, keyboard, pause/resume, privacy, 96 colors/save/cancel, desktop/tablet/mobile')
+    print('PASS: nine channels, isolated day update, data preservation, drafts/save, reload, keyboard, pause/resume, privacy, 96 colors/save/cancel, reorder/drag/keyboard/reload/rollback, desktop/tablet/mobile')
 finally:
  server.shutdown()

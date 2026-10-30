@@ -1,0 +1,12 @@
+const reorder=require('../channel-order.js'),assert=require('node:assert/strict');
+const channels=[{id:'a'},{id:'p',paused:true},{id:'b'},{id:'c'},{id:'q',paused:true}],f=c=>!!c.paused;
+const snapshot=JSON.stringify(channels);
+assert.deepEqual(reorder(channels,'c','a',false,f).map(c=>c.id),['c','p','a','b','q']);
+assert.deepEqual(reorder(channels,'a','c',true,f).map(c=>c.id),['b','p','c','a','q']);
+assert.deepEqual(reorder(channels,'q','p',false,f).map(c=>c.id),['a','q','b','c','p']);
+assert.equal(reorder(channels,'a','p',true,f),channels,'pause group is never changed by ordering');
+assert.equal(reorder(channels,'bad','b',true,f),channels);
+assert.equal(reorder(channels,'a','a',true,f),channels);
+assert.equal(JSON.stringify(channels),snapshot,'pure function never edits channels');
+assert.equal(reorder(channels,'a','b',true,f)[0],channels[2],'channel objects reused, no fields lost');
+console.log('PASS: reorder before/after, paused group isolation, invalid targets, immutable inputs and preserved objects');

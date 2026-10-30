@@ -146,3 +146,56 @@ html,body,#app-root{background:#020304}
 .space-credit:hover{opacity:1;color:#d9e0e3}
 @media(max-width:1100px){#app-root .overview .card{grid-template-columns:minmax(0,1fr) 100px}}
 @media(max-width:700px){#app-root .space-photo{opacity:1}#app-root .overview .card{grid-template-columns:minmax(0,1fr) 100px}#app-root .overview .open-channel{font-size:9px}}
+/* Neutral black finish: no cyan/green panel tint, sharper contrast and cleaner controls. */
+:root[data-theme="dark"]{--page:#030303;--ink:#f7f7f7;--ink-2:#d0d0d0;--ink-3:#aaa;--ink-4:#888;--day-bg:#242424;--day-bd:#ffffff24;--day-future-bg:#191919;--day-future-bd:#ffffff18;--rest-a:#303030;--rest-b:#242424;--sheet-bg:#141414;--menu-bg:#181818;--input-bg:#242424;--input-bd:#ffffff38;--input-focus-bg:#292929;--soft:#ffffff0b;--soft-2:#ffffff15}
+html,body,#app-root{background:#030303}
+#app-root .space-photo{filter:none;backdrop-filter:none;-webkit-backdrop-filter:none;opacity:1}
+#app-root .space-photo::after{background:linear-gradient(#00000008,#00000008)}
+#app-root .topbar,#app-root .card,#app-root .channel-rail,#app-root .sheet{background:linear-gradient(150deg,#222222fc,#101010fc 65%);border-color:#ffffff42;box-shadow:inset 0 1px 0 #ffffff29,0 6px 20px #0008;backdrop-filter:none;-webkit-backdrop-filter:none}
+#app-root .topbar{border-radius:18px}
+#app-root .overview .card,#app-root .focus .card{border-radius:18px}
+#app-root .channel-rail{border-radius:16px}
+#app-root .card-id b,#app-root .channel-nav-text b,#app-root .workspace summary{color:#fafafa}
+#app-root .channel-nav-text small,#app-root .rail-group-label,#app-root .view-hint,#app-root .legend,#app-root .dow span,#app-root .color-family-name{color:#aaa}
+#app-root .day:not(.pad){background:linear-gradient(155deg,#303030,#202020);border-color:#ffffff24;color:#ddd;box-shadow:inset 0 1px 0 #ffffff0b;border-radius:5px}
+#app-root .day.st-before{opacity:.65}
+#app-root .day.st-future{background:linear-gradient(#202020,#191919);color:#bcbcbc}
+#app-root .day.st-done{color:#171300;background:linear-gradient(#ffe37d,#ffd33d);border-color:#ffecaa;box-shadow:inset 0 1px 0 #fff4ce;font-weight:700}
+#app-root .day.st-rest{background:linear-gradient(#353535,#292929);color:#e0e0e0}
+#app-root .day.st-miss{background:linear-gradient(#b23942,#89232b);border-color:#e36a7488;color:#fff0f1}
+#app-root .day.st-plan{background:#242019;border-color:#ffd84d;color:#ffe391}
+#app-root .day.is-today{outline-color:#fff;box-shadow:none}
+#app-root .day.is-today.st-done{outline-color:#fff4cb}
+#app-root .card.is-frozen{background:linear-gradient(#222,#141414);border-color:#ffffff3b;box-shadow:inset 0 1px 0 #ffffff1f,0 6px 20px #0008}
+#app-root .card.is-frozen::before,#app-root .card.is-frozen::after{opacity:.08;filter:grayscale(1)}
+#app-root .card.is-frozen .streakline,#app-root .card.is-frozen .freeze-control{color:#bbb}
+#app-root .view-switch{background:linear-gradient(#232323,#111);border-color:#ffffff45;border-radius:12px}
+#app-root .view-switch button{color:#ddd;border-radius:8px}
+#app-root .view-switch button[aria-pressed="true"]{color:#171300;background:linear-gradient(#ffe586,#ffd33d);box-shadow:inset 0 1px 0 #fff1ba}
+#app-root .topbar .btn-primary,#app-root .btn-ghost,#app-root .navbtn,#app-root .todaybtn,#app-root .b-cancel,#app-root .open-channel{background:linear-gradient(#292929,#111);border:1px solid #ffffff55;color:#fafafa;box-shadow:inset 0 1px 0 #ffffff24;backdrop-filter:none;-webkit-backdrop-filter:none}
+#app-root .topbar #addBtn,#app-root .b-save{background:linear-gradient(#ffe586,#ffd33d);border:1px solid #ffeeb5;color:#171300;box-shadow:inset 0 1px 0 #fff3c9}
+#app-root .btn-ghost::before,#app-root .btn-ghost::after,#app-root .navbtn::before,#app-root .navbtn::after,#app-root .b-cancel::before,#app-root .b-cancel::after,#app-root .b-save::before,#app-root .b-save::after{display:none}
+#app-root .workspace-tag{background:#ffffff0d;border-color:#ffffff18;color:#ffe18a}
+#app-root .veil{backdrop-filter:none;-webkit-backdrop-filter:none;background:#000a}
+#app-root .channel-nav[aria-pressed="true"]{background:#272727;border-color:#ffd84d;box-shadow:inset 0 1px 0 #ffffff12}
+#app-root .channel-row{position:relative;display:grid;grid-template-columns:14px minmax(0,1fr) 20px;align-items:center;gap:2px;border-radius:10px;margin-bottom:3px}
+#app-root .channel-row .channel-nav{padding:10px 7px;gap:8px;margin:0;width:100%;min-width:0}
+#app-root .channel-row .channel-nav-text b{font-size:11px}
+#app-root .channel-row .channel-nav .av{width:28px;height:28px;font-size:11px}
+#app-root .channel-row .channel-nav-text small{font-size:9px}
+#app-root .order-grip{padding:8px 0;color:#888;cursor:grab;font-size:19px;line-height:1}
+#app-root .order-grip:active{cursor:grabbing}
+#app-root .order-arrows{display:flex;flex-direction:column;gap:2px;opacity:0;transition:opacity .12s}
+#app-root .channel-row:hover .order-arrows,#app-root .channel-row:focus-within .order-arrows{opacity:1}
+#app-root .order-arrows button{width:20px;height:23px;border-radius:5px;border:1px solid #ffffff30;background:#2c2c2c;color:#fff;font-size:13px}
+#app-root .order-arrows button:hover:not(:disabled){background:#ffd84d;color:#171300;border-color:#ffe89d}
+#app-root .order-arrows button:disabled,#app-root .order-grip:disabled{opacity:.22;cursor:default}
+#app-root .channel-row.drop-before::before,#app-root .channel-row.drop-after::after{content:'';position:absolute;left:14px;right:0;height:2px;background:#ffd84d;box-shadow:0 0 5px #ffd84d44;pointer-events:none;z-index:3}
+#app-root .channel-row.drop-before::before{top:-2px}#app-root .channel-row.drop-after::after{bottom:-2px}
+#app-root .channel-row.is-dragging{opacity:.4}
+@media(hover:none){#app-root .order-arrows{opacity:1}#app-root .order-arrows button{height:28px}}
+@media(max-width:700px){#app-root .channel-row{width:205px;flex-shrink:0}#app-root .channel-row .channel-nav{width:100%}#app-root .order-arrows{opacity:1}}
+#app-root .channel-row .channel-nav-text b{font-size:12px}
+#app-root .channel-row .channel-nav-text small{font-size:10px}
+@media(min-width:1101px){#app-root .focus{grid-template-columns:300px minmax(0,1fr)}}
+@media(min-width:701px) and (max-width:1100px){#app-root .focus{grid-template-columns:235px minmax(0,1fr)}}
