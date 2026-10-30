@@ -636,7 +636,7 @@
   .workspace [hidden] { display: none !important; }
   .workspace-status:empty { display: none; }
 </style>
-<link rel="stylesheet" href="workspace-layout.css?v=black-order-20261031">
+<link rel="stylesheet" href="workspace-layout.css?v=white-hover-20261031">
 </head>
 <body>
 <div id="app-root">
@@ -1246,15 +1246,14 @@
           '<button type="button" class="order-grip" draggable="true" data-drag-channel="' + esc(ch.id) + '" aria-label="Перетащить канал" title="Перетащить канал"' + (orderSaving ? ' disabled' : '') + '>⠿</button>' +
           '<button class="channel-nav" data-open-channel="' + esc(ch.id) + '" aria-pressed="' + (ch.id === layout.selected) + '">' + avBox(ch, '') +
           '<span class="channel-nav-text"><b>' + nameHTML(ch) + '</b><small>' + (paused ? '❄ На паузе' : st.done + ' выложено · ' + st.miss + ' пропусков') + '</small></span></button>' +
-          '<div class="order-arrows"><button type="button" data-move-channel="' + esc(ch.id) + '" data-direction="-1" aria-label="Поднять канал" title="Поднять (Alt + ↑)"' + (orderSaving || i === 0 ? ' disabled' : '') + '>↑</button>' +
-          '<button type="button" data-move-channel="' + esc(ch.id) + '" data-direction="1" aria-label="Опустить канал" title="Опустить (Alt + ↓)"' + (orderSaving || i === channels.length - 1 ? ' disabled' : '') + '>↓</button></div></div>';
+          '</div>';
       }).join('');
     }).join('');
   }
   function orderRail() { var rail = root.querySelector('.channel-rail'); if (rail) rail.innerHTML = railHTML(); }
-  function focusChannelControl(id, direction) {
-    root.querySelectorAll('[data-move-channel]').forEach(function (b) {
-      if (b.getAttribute('data-move-channel') === id && b.getAttribute('data-direction') === String(direction) && !b.disabled) b.focus();
+  function focusChannelControl(id) {
+    root.querySelectorAll('.channel-nav').forEach(function (b) {
+      if (b.getAttribute('data-open-channel') === id) b.focus();
     });
   }
   function persistChannelOrder(sourceId, targetId, after, direction) {
@@ -1279,16 +1278,6 @@
     var index = group.indexOf(ch), target = group[index + direction];
     if (target) return persistChannelOrder(id, target.id, direction > 0, direction);
   }
-  root.addEventListener('click', function (e) {
-    var control = e.target.closest('[data-move-channel]');
-    if (control) moveChannel(control.getAttribute('data-move-channel'), Number(control.getAttribute('data-direction')));
-  });
-  root.addEventListener('keydown', function (e) {
-    var control = e.target.closest('[data-move-channel]');
-    if (control && e.altKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-      e.preventDefault(); moveChannel(control.getAttribute('data-move-channel'), e.key === 'ArrowDown' ? 1 : -1);
-    }
-  });
   function clearDropTargets() {
     root.querySelectorAll('.channel-row').forEach(function (row) { row.classList.remove('drop-before', 'drop-after'); });
   }
@@ -1406,7 +1395,8 @@
         var dk = y + '-' + pad(m + 1) + '-' + pad(d);
         var s = stateOf(ch, dk);
         var cls = 'day st-' + s + ' tap' + (dk === TODAY ? ' is-today' : '');
-        cells += '<button class="' + cls + '" data-ch="' + ch.id + '" data-d="' + dk + '"' + (isFrozen(ch) ? ' disabled' : '') + '>' + d + '</button>';
+        var statusLabel = {done:'Выложено',rest:'Выходной',miss:'Пропущено',plan:'Запланировано',pending:'Без отметки',future:'Без отметки',before:'До начала отслеживания',frozen:'На паузе'}[s] || '';
+        cells += '<button title="' + dk + ' — ' + statusLabel + '" aria-label="' + dk + ' — ' + statusLabel + '" class="' + cls + '" data-ch="' + ch.id + '" data-d="' + dk + '"' + (isFrozen(ch) ? ' disabled' : '') + '>' + d + '</button>';
       }
       return '<article data-card="' + esc(ch.id) + '" class="card' + (isFrozen(ch) ? ' is-frozen' : '') + '">' +
         '<div class="card-head">' +

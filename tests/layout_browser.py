@@ -92,14 +92,14 @@ try:
     # Order is persisted in the existing channel array; all fields/marks remain exact.
     page.locator('[data-open-channel="0"]').click()
     before_order = page.evaluate('JSON.parse(localStorage.getItem("uploadtracker:v1"))')
-    page.locator('[data-move-channel="0"][data-direction="1"]').click()
+    page.locator('[data-open-channel="0"]').focus(); page.keyboard.press('Alt+ArrowDown')
     page.wait_for_function('JSON.parse(localStorage.getItem("uploadtracker:v1")).channels[0].id === "1"')
     reordered = page.evaluate('JSON.parse(localStorage.getItem("uploadtracker:v1"))')
     assert reordered['marks'] == before_order['marks']
     assert {c['id']:c for c in reordered['channels']} == {c['id']:c for c in before_order['channels']}
     page.reload()
     assert page.locator('.channel-nav').first.get_attribute('data-open-channel') == '1'
-    assert page.locator('[data-move-channel="1"][data-direction="-1"]').is_disabled()
+    assert page.locator('[data-move-channel], .order-arrows').count() == 0
     page.locator('[data-drag-channel="8"]').drag_to(page.locator('[data-order-row="1"]'), target_position={'x':60, 'y':2})
     page.wait_for_function('JSON.parse(localStorage.getItem("uploadtracker:v1")).channels[0].id === "8"')
     page.locator('[data-open-channel="8"]').focus(); page.keyboard.press('Alt+ArrowDown')
@@ -108,7 +108,7 @@ try:
     stable = page.evaluate('localStorage.getItem("uploadtracker:v1")')
     page.evaluate("""() => { window.originalStorageSet=Storage.prototype.setItem;
         Storage.prototype.setItem=function(k,v){if(k==='uploadtracker:v1')throw new Error('quota test');return window.originalStorageSet.call(this,k,v);}; }""")
-    page.locator('[data-move-channel="0"][data-direction="1"]').click()
+    page.locator('[data-open-channel="0"]').focus(); page.keyboard.press('Alt+ArrowDown')
     page.wait_for_function('document.getElementById("toast").textContent.includes("Перемещение отменено")')
     assert page.evaluate('localStorage.getItem("uploadtracker:v1")') == stable
     assert page.locator('.channel-nav').first.get_attribute('data-open-channel') == '1'
@@ -118,8 +118,23 @@ try:
     # Neutral panels and an unblurred owner-provided background.
     assert page.locator('.space-photo').evaluate('(e)=>getComputedStyle(e).filter') == 'none'
     assert '#222222' in page.locator('[data-card]').first.evaluate('(e)=>getComputedStyle(e).backgroundImage') or '34, 34, 34' in page.locator('[data-card]').first.evaluate('(e)=>getComputedStyle(e).backgroundImage')
+    rest = page.locator('.day.st-rest').first
+    blank = page.locator('.day.st-pending, .day.st-future').first
+    assert rest.count() and blank.count()
+    assert rest.evaluate('(e)=>getComputedStyle(e).backgroundImage') != blank.evaluate('(e)=>getComputedStyle(e).backgroundImage')
+    assert rest.evaluate('(e)=>getComputedStyle(e,"::after").width') == '4px'
+    assert 'Выходной' in rest.get_attribute('aria-label')
+    page.locator('[data-layout="focus"]').click()
+    before_hover = page.evaluate('localStorage.getItem("uploadtracker:v1")')
+    nav = page.locator('[data-open-channel="0"]'); nav.hover()
+    assert nav.evaluate('(e)=>getComputedStyle(e).outlineWidth') == '1px'
+    assert nav.evaluate('(e)=>getComputedStyle(e).outlineColor') == 'rgb(255, 255, 255)'
+    assert nav.evaluate('(e)=>getComputedStyle(e).boxShadow') != 'none'
+    assert page.locator('.order-arrows, [data-move-channel]').count() == 0
+    assert page.locator('[data-drag-channel]').count() == 9
+    assert page.evaluate('localStorage.getItem("uploadtracker:v1")') == before_hover
     assert not errors, errors
     browser.close()
-    print('PASS: nine channels, isolated day update, data preservation, drafts/save, reload, keyboard, pause/resume, privacy, 96 colors/save/cancel, reorder/drag/keyboard/reload/rollback, desktop/tablet/mobile')
+    print('PASS: nine channels, isolated day update, data preservation, drafts/save, reload, keyboard, pause/resume, privacy, 96 colors/save/cancel, reorder/drag/keyboard/reload/rollback, distinct rest, white hover, desktop/tablet/mobile')
 finally:
  server.shutdown()
