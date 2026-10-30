@@ -636,6 +636,7 @@
   .workspace [hidden] { display: none !important; }
   .workspace-status:empty { display: none; }
 </style>
+<link rel="stylesheet" href="workspace-layout.css">
 </head>
 <body>
 <div id="app-root">
@@ -675,6 +676,13 @@
     </button>
   </header>
 
+  <section class="view-toolbar" aria-label="Вид рабочего пространства">
+    <div class="view-switch" role="group" aria-label="Режим просмотра">
+      <button type="button" data-layout="overview" aria-pressed="true">▦ Обзор</button>
+      <button type="button" data-layout="focus" aria-pressed="false">▤ Работа</button>
+    </div>
+    <span id="viewHint" class="view-hint">Все каналы перед глазами</span>
+  </section>
   <main class="grid" id="grid"></main>
 
   <div class="legend" id="legend" style="display:none">
@@ -936,7 +944,7 @@
   }
 
   function workspaceHTML(ch) {
-    var ws = ch.workspace || {}, id = esc(ch.id), ownURL = safeURL(ws.channelURL);
+    var ws = workspaceDrafts[ch.id] || ch.workspace || {}, id = esc(ch.id), ownURL = safeURL(ws.channelURL);
     return '<details class="workspace" data-workspace="' + id + '"' + (workspaceOpen[ch.id] ? ' open' : '') + '>' +
       '<summary><span>Рабочее пространство</span><span class="workspace-preview">' + featurePreview(ws) + '</span></summary>' +
       '<div class="workspace-body"><label for="channel-url-' + id + '">Мой YouTube-канал</label>' +
@@ -1014,6 +1022,7 @@
     var button = box.querySelector('[data-workspace-save]');
     button.disabled = true;
     store.set(KEY, JSON.stringify({ channels: state.channels, marks: state.marks })).then(function () {
+      delete workspaceDrafts[channel.id];
       box.querySelector('.workspace-preview').innerHTML = featurePreview(ws);
       box.querySelector('.workspace-status').textContent = 'Настройки сохранены';
       toast('Настройки проекта сохранены');
@@ -1023,10 +1032,102 @@
     }).finally(function () { button.disabled = false; });
   });
 
+  var workspaceDrafts = {};
+  var LAYOUT_KEY = 'uploadtracker:layout:v1';
+  var layout = { mode: 'overview', selected: '', pausedOpen: false };
+  try {
+    var remembered = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}');
+    if (remembered.mode === 'focus') layout.mode = 'focus';
+    if (typeof remembered.selected === 'string') layout.selected = remembered.selected;
+    layout.pausedOpen = remembered.pausedOpen === true;
+  } catch (_) {}
+  function captureWorkspaceDrafts() {
+    root.querySelectorAll('[data-workspace]').forEach(function (box) {
+      var id = box.getAttribute('data-workspace');
+      var channel = state.channels.find(function (ch) { return ch.id === id; });
+      if (!channel) return;
+      var ws = Object.assign({}, channel.workspace || {});
+      ws.channelURL = box.querySelector('[data-own-url]').value;
+      ws.model = box.querySelector('[data-model]').value;
+      VIDEO_FEATURES.forEach(function (f) { ws[f[0]] = box.querySelector('[data-feature="' + f[0] + '"]').checked; });
+      ws.competitors = Array.from(box.querySelector('[data-link-list="competitors"]').children).map(function (row) {
+        return {name: row.querySelector('[data-link-name]').value, url: row.querySelector('[data-link-url]').value};
+      });
+      workspaceDrafts[id] = ws;
+    });
+  }
+  function rememberLayout() {
+    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)); } catch (_) {}
+  }
+  function ensureSelection() {
+    if (!state.channels.some(function (ch) { return ch.id === layout.selected; })) {
+      var first = state.channels.find(function (ch) { return !isFrozen(ch); }) || state.channels[0];
+      layout.selected = first ? first.id : '';
+    }
+  }
+  function paintLayoutControls() {
+    $('grid').className = 'workspace-layout ' + layout.mode;
+    root.querySelectorAll('[data-layout]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-layout') === layout.mode));
+    });
+    $('viewHint').textContent = layout.mode === 'focus' ? 'Один канал · переключение слева' : 'Все каналы перед глазами';
+  }
+  function railHTML() {
+    return [false, true].map(function (paused) {
+      var channels = state.channels.filter(function (ch) { return isFrozen(ch) === paused; });
+      if (!channels.length) return '';
+      return '<div class="rail-group-label">' + (paused ? 'На паузе' : 'Активные') + ' · ' + channels.length + '</div>' + channels.map(function (ch) {
+        var st = monthStats(ch, view.getFullYear(), view.getMonth());
+        return '<button class="channel-nav" data-open-channel="' + esc(ch.id) + '" aria-pressed="' + (ch.id === layout.selected) + '">' + avBox(ch, '') +
+          '<span class="channel-nav-text"><b>' + nameHTML(ch) + '</b><small>' + (paused ? '❄ На паузе' : st.done + ' выложено · ' + st.miss + ' пропусков') + '</small></span></button>';
+      }).join('');
+    }).join('');
+  }
+  function selectChannel(id) {
+    if (!state.channels.some(function (ch) { return ch.id === id; })) return;
+    closeChooser(); layout.selected = id; layout.mode = 'focus'; rememberLayout(); render();
+  }
+  // Replace only changed channel content. Other calendars and open editors retain their DOM.
+  function refreshChannel(id) {
+    captureWorkspaceDrafts();
+    var ch = state.channels.find(function (ch) { return ch.id === id; });
+    if (!ch) return;
+    var cards = root.querySelectorAll('[data-card]');
+    cards.forEach(function (card) {
+      if (card.getAttribute('data-card') === id) card.outerHTML = cardHTML(ch);
+    });
+    if (layout.mode === 'focus') {
+      var rail = root.querySelector('.channel-rail');
+      if (rail) rail.innerHTML = railHTML();
+    }
+  }
+  root.addEventListener('click', function (e) {
+    var mode = e.target.closest('[data-layout]');
+    if (mode) { closeChooser(); layout.mode = mode.getAttribute('data-layout') === 'focus' ? 'focus' : 'overview'; rememberLayout(); render(); return; }
+    var channel = e.target.closest('[data-open-channel]');
+    if (channel) selectChannel(channel.getAttribute('data-open-channel'));
+  });
+  root.addEventListener('keydown', function (e) {
+    var nav = e.target.closest('[data-open-channel]');
+    if (!nav || layout.mode !== 'focus' || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+    var ordered = state.channels.filter(function (ch) { return !isFrozen(ch); }).concat(state.channels.filter(isFrozen));
+    var index = ordered.findIndex(function (ch) { return ch.id === layout.selected; });
+    index = e.key === 'Home' ? 0 : e.key === 'End' ? ordered.length - 1 : (index + (e.key === 'ArrowDown' ? 1 : -1) + ordered.length) % ordered.length;
+    e.preventDefault(); selectChannel(ordered[index].id);
+    root.querySelectorAll('.channel-nav').forEach(function (button) {
+      if (button.getAttribute('data-open-channel') === layout.selected) button.focus();
+    });
+  });
+  root.addEventListener('toggle', function (e) {
+    if (e.target.matches && e.target.matches('.paused-group')) { layout.pausedOpen = e.target.open; rememberLayout(); }
+  }, true);
+
   function render() {
+    captureWorkspaceDrafts();
     var y = view.getFullYear(), m = view.getMonth();
     $('monthLabel').textContent = MONTHS_N[m] + ' ' + y;
     var grid = $('grid');
+    paintLayoutControls();
 
     if (!state.channels.length) {
       $('legend').style.display = 'none';
@@ -1045,11 +1146,25 @@
 
     $('legend').style.display = '';
 
+    ensureSelection();
+    paintLayoutControls();
+    if (layout.mode === 'focus') {
+      var selected = state.channels.find(function (ch) { return ch.id === layout.selected; });
+      grid.innerHTML = '<aside class="channel-rail" aria-label="Каналы">' + railHTML() + '</aside>' +
+        '<section class="focus-panel" aria-label="Выбранный канал">' + cardHTML(selected) + '</section>';
+    } else {
+      var active = state.channels.filter(function (ch) { return !isFrozen(ch); });
+      var paused = state.channels.filter(isFrozen);
+      grid.innerHTML = '<section class="overview-grid" aria-label="Активные каналы">' + active.map(cardHTML).join('') + '</section>' +
+        (paused.length ? '<details class="paused-group"' + (layout.pausedOpen ? ' open' : '') + '><summary>❄ На паузе <span>' + paused.length + '</span></summary><div class="overview-grid">' + paused.map(cardHTML).join('') + '</div></details>' : '');
+    }
+  }
+
+  function cardHTML(ch) {
+    var y = view.getFullYear(), m = view.getMonth();
     var offset = (new Date(y, m, 1).getDay() + 6) % 7;
     var lastDay = new Date(y, m + 1, 0).getDate();
-
-    grid.innerHTML = state.channels.map(function (ch, i) {
-      var st = monthStats(ch, y, m), sk = streakOf(ch), cells = '';
+    var st = monthStats(ch, y, m), sk = streakOf(ch), cells = '';
       for (var p = 0; p < offset; p++) cells += '<div class="day pad"></div>';
       for (var d = 1; d <= lastDay; d++) {
         var dk = y + '-' + pad(m + 1) + '-' + pad(d);
@@ -1057,7 +1172,7 @@
         var cls = 'day st-' + s + ' tap' + (dk === TODAY ? ' is-today' : '');
         cells += '<button class="' + cls + '" data-ch="' + ch.id + '" data-d="' + dk + '"' + (isFrozen(ch) ? ' disabled' : '') + '>' + d + '</button>';
       }
-      return '<article class="card' + (isFrozen(ch) ? ' is-frozen' : '') + '" style="animation-delay:' + (i * 45) + 'ms">' +
+      return '<article data-card="' + esc(ch.id) + '" class="card' + (isFrozen(ch) ? ' is-frozen' : '') + '">' +
         '<div class="card-head">' +
           avBox(ch, '') +
           '<div class="card-id"><b>' + nameHTML(ch) + '</b>' +
@@ -1078,10 +1193,10 @@
           '<div class="stat r"><b>' + st.miss + '</b> ' + plural(st.miss, ['пропуск','пропуска','пропусков']) + '</div>' +
           (st.ahead ? '<div class="stat g"><b>' + st.ahead + '</b> в плане</div>' : '') +
           '<div class="bar" title="' + st.pct + '%"><i style="width:' + st.pct + '%"></i></div>' +
-        '</div>' + workspaceHTML(ch) +
-        '<button class="freeze-control" data-freeze="' + ch.id + '" aria-pressed="' + isFrozen(ch) + '">' +
-        (isFrozen(ch) ? 'Разморозить канал' : '❄ Заморозить канал') + '</button></article>';
-    }).join('');
+        '</div>' + (layout.mode === 'focus' ? workspaceHTML(ch) : '<div class="overview-features">' + featurePreview(ch.workspace || {}) + '</div><button class="open-channel" data-open-channel="' + esc(ch.id) + '">Открыть канал <span>↗</span></button>') +
+        (layout.mode === 'focus' ? '<button class="freeze-control" data-freeze="' + ch.id + '" aria-pressed="' + isFrozen(ch) + '">' +
+        (isFrozen(ch) ? 'Разморозить канал' : '❄ Заморозить канал') + '</button>' : '') + '</article>';
+
   }
 
   /* ---------- выбор дня ---------- */
@@ -1095,7 +1210,7 @@
   function applyMark(chId, dk, value) {
     var box = state.marks[chId] || (state.marks[chId] = {});
     if (value === null) delete box[dk]; else box[dk] = value;
-    save(); closeChooser(); render();
+    save(); closeChooser(); refreshChannel(chId);
     var fresh = root.querySelector('[data-ch="' + chId + '"][data-d="' + dk + '"]');
     if (fresh) { fresh.classList.add('bump'); setTimeout(function () { fresh.classList.remove('bump'); }, 450); }
   }

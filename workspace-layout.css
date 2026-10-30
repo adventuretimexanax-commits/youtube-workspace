@@ -1,0 +1,62 @@
+/* Overview and focused workspace. No transforms: text remains crisp at native size. */
+#app-root .view-toolbar{display:flex;align-items:center;gap:18px;margin:22px 0 18px}
+#app-root .view-switch{display:flex;gap:4px;background:#12161d;border:1px solid #ffffff12;padding:5px;border-radius:15px}
+#app-root .view-switch button{padding:10px 22px;border-radius:10px;color:#939baa;font-weight:650;font-size:14px;transition:background .15s,color .15s}
+#app-root .view-switch button[aria-pressed="true"]{background:#ffd84d;color:#1b1b16;box-shadow:0 2px 8px #0003}
+#app-root .view-hint{color:var(--ink-3);font-size:12px}
+#app-root .workspace-layout{display:block}
+#app-root .overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+#app-root .card{backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(145deg,#1b2029f5,#161a21fa);box-shadow:0 5px 18px #0002;animation:none;transition:border-color .18s;min-width:0}
+#app-root .card:has(.open-channel:hover){border-color:#ffd84d66}
+#app-root .overview .card{padding:16px;border-radius:22px}
+#app-root .overview .card-head{margin-bottom:12px;gap:10px}
+#app-root .overview .card-head .av{width:34px;height:34px;border-radius:11px;font-size:13px}
+#app-root .overview .card-id b{font-size:14px}
+#app-root .overview .streakline{font-size:10px;margin-top:3px}
+#app-root .overview .dow,#app-root .overview .days{gap:5px}
+#app-root .overview .day{height:29px;min-height:0;aspect-ratio:auto;border-radius:8px;font-size:11px;box-shadow:none}
+#app-root .overview .day.st-done{box-shadow:inset 0 1px 0 #fff6}
+#app-root .overview .dow{font-size:9px;margin-bottom:5px}
+#app-root .overview .card-foot{margin-top:12px;padding-top:12px;gap:10px;flex-wrap:wrap}
+#app-root .overview .stat{font-size:10px}
+#app-root .overview .stat b{font-size:14px}
+#app-root .overview .bar{height:4px;max-width:70px}
+#app-root .overview-features{display:flex;gap:5px;flex-wrap:wrap;min-height:20px;margin:12px 0 8px}
+#app-root .overview-features .workspace-tag{font-size:10px;padding:4px 7px}
+#app-root .open-channel{width:100%;display:flex;justify-content:space-between;align-items:center;background:#ffffff06;border:1px solid #ffffff0b;border-radius:10px;padding:9px 11px;color:#dce0e8;font-size:12px;font-weight:600}
+#app-root .open-channel:hover{background:#ffd84d12;color:#ffd84d}
+#app-root .overview .freeze-control{margin-top:8px;font-size:10px;padding:6px 8px}
+#app-root .paused-group{margin-top:24px;border-top:1px solid #ffffff12;padding-top:16px}
+#app-root .paused-group>summary{cursor:pointer;color:#a4b8ca;font-size:13px;padding:4px 0 16px;list-style:none}
+#app-root .paused-group>summary::before{content:'▸';display:inline-block;margin-right:10px}
+#app-root .paused-group[open]>summary::before{content:'▾'}
+#app-root .paused-group>summary span{display:inline-block;background:#ffffff0b;padding:3px 8px;border-radius:7px;margin-left:8px;font-size:11px}
+#app-root .focus{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;align-items:start}
+#app-root .channel-rail{position:sticky;top:18px;max-height:calc(100vh - 36px);overflow-y:auto;padding:8px;background:#151920ed;border:1px solid #ffffff0b;border-radius:20px;scrollbar-width:thin}
+#app-root .rail-group-label{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:#7f899b;padding:14px 11px 8px}
+#app-root .channel-nav{display:flex;align-items:center;gap:10px;padding:11px;width:100%;text-align:left;border:1px solid transparent;border-radius:12px;margin-bottom:3px;min-width:0}
+#app-root .channel-nav:hover{background:#ffffff05}
+#app-root .channel-nav[aria-pressed="true"]{background:#ffd84d0d;border-color:#ffd84d44}
+#app-root .channel-nav .av{width:32px;height:32px;border-radius:10px;font-size:12px;flex-shrink:0}
+#app-root .channel-nav-text{min-width:0}
+#app-root .channel-nav-text b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:#e1e4ec;font-weight:600}
+#app-root .channel-nav-text small{display:block;color:#7f899b;font-size:10px;margin-top:4px}
+#app-root .focus-panel{max-width:880px;width:100%;min-width:0}
+#app-root .focus .card{padding:26px;border-radius:24px}
+#app-root .focus .day{height:clamp(40px,5vw,68px);aspect-ratio:auto;font-size:16px;box-shadow:none}
+#app-root .focus .workspace{margin-top:22px}
+#app-root .card.is-frozen{backdrop-filter:none;-webkit-backdrop-filter:none}
+#app-root .card.is-frozen::before,#app-root .card.is-frozen::after{backdrop-filter:none;-webkit-backdrop-filter:none}
+#app-root button:focus-visible,#app-root summary:focus-visible{outline:2px solid #ffd84d;outline-offset:3px}
+@media(min-width:1700px){#app-root .overview .day{height:33px}}
+@media(max-width:1100px){#app-root .overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#app-root .focus{grid-template-columns:210px minmax(0,1fr);gap:16px}}
+@media(max-width:700px){#app-root .overview-grid{grid-template-columns:1fr}#app-root .focus{grid-template-columns:1fr}#app-root .channel-rail{position:static;display:flex;overflow-x:auto;padding:8px;gap:5px;max-height:none}#app-root .rail-group-label{display:none}#app-root .channel-nav{width:170px;flex-shrink:0;margin:0}#app-root .focus .card{padding:16px}#app-root .view-hint{display:none}#app-root .view-toolbar{margin-top:16px}#app-root .focus .day{height:40px;font-size:13px}}
+@media(prefers-reduced-motion:reduce){#app-root *{animation:none!important;transition:none!important}}
+/* A still background prevents every glass layer being recomposited on every frame. */
+#app-root .amb{animation:none;filter:none}
+#app-root .card-menu{opacity:1}
+#app-root .overview .card{padding:14px}
+#app-root .overview .day{height:24px}
+#app-root .overview-features{display:none}
+#app-root .overview .open-channel{margin-top:10px}
+@media(min-width:1700px){#app-root .overview .day{height:27px}}

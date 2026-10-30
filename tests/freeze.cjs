@@ -21,7 +21,7 @@ assert.equal(a.stateOf(ch,a.shift(today,20)),'frozen');
 assert.equal(a.stateOf(ch,yesterday),'miss','historical misses retained');
 assert.equal(JSON.stringify(a.state.marks),marks,'freeze never rewrites marks');
 assert.match(elements.get('grid').innerHTML,/is-frozen/);
-assert.match(elements.get('grid').innerHTML,/Разморозить канал/);
+assert.match(elements.get('grid').innerHTML,/data-open-channel="test"/,'paused channel stays accessible from overview');
 assert.match(elements.get('grid').innerHTML,/ disabled/);
 assert.ok(!elements.get('grid').innerHTML.includes('streakline hot'));
 const restored=JSON.parse(JSON.stringify(ch));
