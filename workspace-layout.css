@@ -60,3 +60,89 @@
 #app-root .overview-features{display:none}
 #app-root .overview .open-channel{margin-top:10px}
 @media(min-width:1700px){#app-root .overview .day{height:27px}}
+/* Solid Glass: opaque smoked panels, fine reflective rims, no live backdrop blur. */
+:root[data-theme="dark"]{--page:#020304;--ink:#eef1f2;--ink-2:#bdc5cb;--ink-3:#8b969e;--ink-4:#667078;--day-bg:#20282c;--day-bd:#ffffff0c;--day-future-bg:#172025;--day-future-bd:#ffffff08;--rest-a:#303a40;--rest-b:#252e34;--ring:#eed277;--ring-gap:#101719;--sheet-bg:#141b1f;--menu-bg:#151d21}
+html,body,#app-root{background:#020304}
+#app-root{isolation:isolate}
+#app-root::before{display:none}
+#app-root .space-photo{position:fixed;inset:0;z-index:0;pointer-events:none;background:#020304 url('assets/hubble-deep-field.webp') center / cover no-repeat;opacity:.37}
+#app-root .space-photo::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#000d 0%,#0007 50%,#0002 100%)}
+#space-stars{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;contain:strict}
+#app-root .shell{max-width:1600px;padding-top:26px}
+#app-root .topbar{background:linear-gradient(155deg,#232a2dec,#101719f7 70%);border:1px solid #c5d9dc38;border-radius:25px;box-shadow:inset 0 1px 0 #ffffff24,inset 0 -1px 0 #000c,0 10px 30px #0005;backdrop-filter:none;-webkit-backdrop-filter:none}
+#app-root .brand h1{font-weight:650;letter-spacing:-.5px}
+#app-root .topbar .brand span{color:#99a5ab}
+#app-root .card,#app-root .channel-rail{background:linear-gradient(145deg,#293136f7 0%,#172024fa 37%,#10181bf9 100%);border:1px solid #b0c4ca45;box-shadow:inset 0 1px 0 #f4ffff2b,inset 0 -1px 0 #000a,0 7px 22px #0006;backdrop-filter:none;-webkit-backdrop-filter:none}
+#app-root .card:hover{box-shadow:inset 0 1px 0 #f4ffff36,inset 0 -1px 0 #000a,0 7px 22px #0006}
+#app-root .card-id b{font-weight:600;letter-spacing:-.15px;color:#f3f5f5}
+#app-root .card-head .av,#app-root .channel-nav .av{border-radius:50%;border:1px solid #ffffff50;box-shadow:inset 0 1px 0 #ffffff40,0 3px 7px #0003}
+#app-root .view-toolbar{margin:18px 0 16px}
+#app-root .view-switch{border:1px solid #b4c4cb33;box-shadow:inset 0 1px 0 #ffffff12;background:linear-gradient(#1b2428,#0c1215);border-radius:17px}
+#app-root .view-switch button{color:#c0c7cb}
+#app-root .view-switch button[aria-pressed="true"]{color:#fff2be;background:linear-gradient(180deg,#7e6d32aa,#292719);box-shadow:inset 0 1px 0 #ffe7a170,inset 0 0 0 1px #d4b44d66,0 0 12px #dec3680d}
+#app-root .btn-primary,#app-root .btn-ghost,#app-root .navbtn,#app-root .todaybtn{backdrop-filter:none;-webkit-backdrop-filter:none}
+#app-root .topbar .btn-primary{color:#ffe8a7;background:linear-gradient(#5f563766,#29261dbb);border:1px solid #dac58c88;box-shadow:inset 0 1px 0 #fff3cf55,0 2px 8px #0005}
+#app-root .topbar #addBtn{color:#271e06;background:linear-gradient(#ffe79a,#dfb843);border:1px solid #ffecb0;box-shadow:inset 0 1px 0 #fff8d8,0 2px 8px #0005}
+#app-root .topbar .btn-primary::before,#app-root .topbar .btn-primary::after{display:none}
+#app-root .day:not(.pad){background-image:linear-gradient(160deg,#ffffff08,#00000012);box-shadow:inset 0 1px 0 #ffffff0c;border:1px solid #a7c0cc17;border-radius:7px;color:#c4cbd0;font-weight:500}
+#app-root .day.st-done{background:linear-gradient(160deg,#ffeaa2,#edca60 50%,#d4ac3f);border-color:#ffefad99;color:#25200e;font-weight:650;box-shadow:inset 0 1px 0 #fff4c2,0 2px 7px #0003}
+#app-root .day.st-rest{background:linear-gradient(160deg,#303b40,#253137);color:#b0bac1}
+#app-root .day.st-miss{background:linear-gradient(155deg,#a33e49,#762f38);color:#ffe9ed;border-color:#d17b8366}
+#app-root .day.st-before{opacity:.38}
+#app-root .day.st-future{color:#9aa6ac;background:linear-gradient(160deg,#1c272b,#151f23)}
+#app-root .day.st-plan{color:#f2d98b;border-color:#d5b960;background:linear-gradient(#5a4c272b,#332b161a)}
+#app-root .day.is-today{outline:1px solid #f5df9e;outline-offset:2px;box-shadow:none}
+#app-root .day.is-today.st-done{box-shadow:inset 0 1px 0 #fff8d4;outline-color:#fff0bb}
+#app-root .card-foot{border-color:#b7c5cb17}
+#app-root .card-foot .bar{background:#ffffff0d}
+#app-root .card-foot .bar i{background:linear-gradient(90deg,#d3ad48,#ffe49a)}
+#app-root .open-channel{color:#dce2e5;background:linear-gradient(#ffffff08,#0003);border:1px solid #d5e7f22b;box-shadow:inset 0 1px 0 #ffffff0d}
+#app-root .overview .card{display:grid;grid-template-columns:minmax(0,1fr) 102px;column-gap:16px;padding:16px;border-radius:18px}
+#app-root .overview .card-head{grid-column:1/-1}
+#app-root .overview .dow{grid-column:1;grid-row:2}
+#app-root .overview .days{grid-column:1;grid-row:3/5;align-content:start}
+#app-root .overview .card-foot{grid-column:2;grid-row:2/4;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:10px;padding:0 0 0 12px;margin:0;border-top:0;border-left:1px solid #ffffff12}
+#app-root .overview .stat{display:flex;flex-direction:column;gap:3px;color:#97a3aa;font-size:10px}
+#app-root .overview .stat b{font-size:20px;font-weight:550;color:#edf1f2;line-height:1.1}
+#app-root .overview .stat.g b{color:#edce72}
+#app-root .overview .stat.r b{color:#d9949c}
+#app-root .overview .bar{display:none}
+#app-root .overview .open-channel{grid-column:2;grid-row:4;font-size:10px;padding:8px;align-self:end;margin:8px 0 0;width:100%}
+#app-root .overview .day{height:25px;font-size:11px}
+#app-root .overview .dow span{font-size:9px;font-weight:500}
+#app-root .overview .streakline{font-size:10px}
+#app-root .channel-rail{border-radius:19px;background:linear-gradient(145deg,#222c30f7,#111a1efc)}
+#app-root .channel-nav[aria-pressed="true"]{background:linear-gradient(145deg,#806d382d,#332c182d);border-color:#d3b85d66;box-shadow:inset 0 1px 0 #e1d49c1c}
+#app-root .channel-nav-text small{color:#9aa5ac}
+#app-root .rail-group-label{text-transform:none;letter-spacing:.2px;font-size:11px;color:#a9b4ba}
+#app-root .focus-panel{max-width:1100px}
+#app-root .focus .day{height:clamp(40px,4.4vw,60px);font-size:15px}
+#app-root .focus .card{border-radius:23px}
+#app-root .workspace{border-color:#c6d9dc1c}
+#app-root .workspace summary{color:#dce2e6}
+#app-root .workspace-tag{background:#d5e5ed0b;border:1px solid #d5e5ed0c;color:#dbc985}
+#app-root .card.is-frozen{background:linear-gradient(145deg,#2c3940f7,#151e23fc);border-color:#91a9b555;box-shadow:inset 0 1px 0 #d7e9f22b,0 7px 22px #0006}
+#app-root .card.is-frozen::before{opacity:.2}
+#app-root .card.is-frozen::after{opacity:.16}
+#app-root .sheet{background:linear-gradient(145deg,#273136,#11191d);border:1px solid #cadbdf40;box-shadow:inset 0 1px 0 #ffffff29,0 24px 80px #000b;backdrop-filter:none;-webkit-backdrop-filter:none}
+#app-root .sheet .field>label{color:#d3dbdf}
+#app-root .artist-palette{display:grid;gap:8px;max-height:340px;overflow:auto;padding:8px 5px 8px 0;scrollbar-width:thin}
+#app-root .color-family{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;gap:8px}
+#app-root .color-family-name{font-size:10px;color:#b5bfc5}
+#app-root .color-tones{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px}
+#app-root .color-tones .sw{width:100%;height:27px;border-radius:6px;border:1px solid #ffffff30;box-shadow:inset 0 1px 0 #ffffff1a}
+#app-root .color-tones .sw.is-on{outline:2px solid #f7df9c;outline-offset:2px;box-shadow:inset 0 0 0 1px #0009}
+#app-root .palette-count{float:right;font-size:11px;color:#e1cd8a;font-weight:400}
+#app-root .palette-hint{font-size:11px;color:#94a0a7;margin:6px 0 4px}
+#app-root .space-credit{position:relative;z-index:2;display:block;text-align:center;color:#919b9f;font-size:10px;text-decoration:none;margin:28px 12px 0;opacity:.65}
+#app-root .space-credit:hover{opacity:1;color:#d9e0e3}
+@media(min-width:1700px){#app-root .overview .day{height:29px}}
+@media(max-width:1100px){#app-root .overview .card{grid-template-columns:minmax(0,1fr) 90px;column-gap:10px}}
+@media(max-width:700px){#app-root .shell{padding:16px 12px 0}#app-root .overview .card{grid-template-columns:minmax(0,1fr) 90px;padding:14px}#app-root .space-photo{opacity:.28}#app-root .color-family{grid-template-columns:68px minmax(0,1fr);gap:6px}#app-root .color-tones{gap:4px}#app-root .color-tones .sw{height:25px}#app-root .color-family-name{font-size:9px}#app-root .palette-count{float:none;display:block;margin-top:5px}}
+#app-root .space-photo{opacity:.15}
+#app-root .overview .card{grid-template-columns:minmax(0,1fr) 112px}
+#app-root .overview .open-channel{white-space:nowrap;font-size:10px;gap:4px}
+.space-credit{position:relative;z-index:2;display:block;text-align:center;color:#919b9f;font:10px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;text-decoration:none;margin:20px 12px 24px;opacity:.65}
+.space-credit:hover{opacity:1;color:#d9e0e3}
+@media(max-width:1100px){#app-root .overview .card{grid-template-columns:minmax(0,1fr) 100px}}
+@media(max-width:700px){#app-root .space-photo{opacity:.12}#app-root .overview .card{grid-template-columns:minmax(0,1fr) 100px}#app-root .overview .open-channel{font-size:9px}}

@@ -30,9 +30,17 @@ assert.ok(!html.includes('store.get(THEME_KEY)'),'cloud light preference cannot 
 assert.match(html,/var KEY = 'uploadtracker:v1'/);
 assert.match(html,/var DB_KEY = 'uploadtracker:directory:v1'/);
 assert.match(html,/indexOf\(ch.accent\) !== -1 \? '#ffd84d,#f2cb3f'/);
-const accents = html.match(/var ACCENTS = \[([\s\S]*?)\];/)[1].match(/'#[^']+'/g);
-assert.equal(accents.length,24);
-assert.equal(new Set(accents).size,24);
+const vm = require('node:vm');
+const groups = JSON.parse(html.match(/var COLOR_GROUPS = (\[[\s\S]*?\n\]);/)[1]);
+const accents = groups.flatMap(group=>group.colors);
+assert.equal(groups.length,12);
+assert.ok(groups.every(group=>group.colors.length===8));
+assert.equal(accents.length,96);
+assert.equal(new Set(accents).size,96);
+assert.ok(accents.every(a=>/^#[0-9a-f]{6},#[0-9a-f]{6}$/.test(a)));
+function lightness(hex){let c=hex.slice(1).match(/../g).map(n=>parseInt(n,16));return (Math.min(...c)+Math.max(...c))/2;}
+for(const group of groups) for(let i=1;i<8;i++)assert.ok(lightness(group.colors[i].split(',')[0])>lightness(group.colors[i-1].split(',')[0]),'ordered shades: '+group.name);
+assert.match(html,/aria-pressed="' \+ \(a === draft.accent\)/);
 assert.match(css,/\.swatches\s*\{[^}]*flex-wrap: wrap/);
 const yellow = [242,203,63], ink = [23,22,0];
 function luminance(rgb) { return rgb.map(c=>c/255).map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0); }

@@ -64,8 +64,33 @@ try:
         for mode in ['overview', 'focus']:
             page.locator('[data-layout="' + mode + '"]').click()
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), (width, mode)
+    # New palette: cancel is nonmutating; choosing a shade survives reload.
+    page.set_viewport_size({'width': 1440, 'height': 1080})
+    page.locator('[data-open-channel="0"]').click()
+    before = page.evaluate('localStorage.getItem("uploadtracker:v1")')
+    page.locator('[data-edit="0"]').click()
+    assert page.locator('[data-acc]').count() == 96
+    assert page.locator('.color-family').count() == 12
+    assert page.locator('[data-acc][aria-label]').count() == 96
+    page.locator('#bCancel').click()
+    assert page.evaluate('localStorage.getItem("uploadtracker:v1")') == before
+    page.locator('[data-edit="0"]').click()
+    choice = page.locator('[data-acc]').nth(55)
+    chosen = choice.get_attribute('data-acc'); choice.click()
+    assert page.locator('[data-acc][aria-pressed="true"]').count() == 1
+    page.locator('#bSave').click()
+    page.wait_for_function('(chosen)=>JSON.parse(localStorage.getItem("uploadtracker:v1")).channels[0].accent===chosen', arg=chosen)
+    after = page.evaluate('JSON.parse(localStorage.getItem("uploadtracker:v1"))')
+    original = json.loads(before); original['channels'][0]['accent'] = chosen
+    assert after == original
+    page.reload(); page.locator('[data-edit="0"]').click()
+    assert page.locator('[data-acc][aria-pressed="true"]').get_attribute('data-acc') == chosen
+    page.locator('#bCancel').click()
+    assert page.locator('#space-stars').evaluate('(e)=>e.width*e.height') <= 3010000
+    assert page.locator('.space-photo').evaluate('(e)=>getComputedStyle(e).backgroundImage').find('hubble-deep-field.webp') >= 0
+    assert page.locator('[data-card]').first.evaluate('(e)=>getComputedStyle(e).backdropFilter') == 'none'
     assert not errors, errors
     browser.close()
-    print('PASS: nine channels, isolated day update, data preservation, drafts/save, reload, keyboard, pause/resume, privacy, desktop/tablet/mobile')
+    print('PASS: nine channels, isolated day update, data preservation, drafts/save, reload, keyboard, pause/resume, privacy, 96 colors/save/cancel, desktop/tablet/mobile')
 finally:
  server.shutdown()

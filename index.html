@@ -640,7 +640,8 @@
 </head>
 <body>
 <div id="app-root">
-<div class="amb"></div>
+<div class="space-photo" aria-hidden="true"></div>
+<canvas id="space-stars" aria-hidden="true"></canvas>
 <div class="grain"></div>
 
 <div class="shell">
@@ -780,12 +781,166 @@
   };
   paintPrivacyButton();
 
-  var ACCENTS = [
-    '#ff5f6d,#ffc371', '#00d2ff,#3a7bd5', '#a86bff,#f857a6', '#ffd84d,#f2cb3f', '#ff8a3d,#ff5f6d', '#4b5bff,#9a4bff',
-    '#ffe600,#ffb800', '#fff7a3,#f4ce38', '#ffcc80,#e87924', '#ff9f43,#c95812', '#ff6b6b,#d63031', '#ff455c,#b41438',
-    '#ff91b6,#e84393', '#f7a8ef,#ad36b6', '#de7aff,#8e44ad', '#c7b0ff,#7d5fff', '#9788ff,#4834d4', '#6c8cff,#2c4bb8',
-    '#67b7ff,#1964b5', '#91d8ff,#3386b7', '#b8c9ec,#657fa9', '#d9dde7,#848b9c', '#9ea6b8,#50596e', '#f3c9ad,#aa7755'
-  ];
+  // Twelve hue families, each progressing from shade to tint. Saved colors remain unchanged.
+  var COLOR_GROUPS = [
+  {
+    "name": "Кармин",
+    "colors": [
+      "#661520,#3f0d11",
+      "#831b29,#5d1319",
+      "#a12132,#7b1921",
+      "#be273b,#981f29",
+      "#d53449,#b62531",
+      "#dc5668,#d5303d",
+      "#e47c8a,#dc5661",
+      "#eda6b0,#e58088"
+    ]
+  },
+  {
+    "name": "Терракота",
+    "colors": [
+      "#662a15,#3f1d0d",
+      "#83371b,#5d2b13",
+      "#a14321,#7b3819",
+      "#be4f27,#98461f",
+      "#d55f34,#b65325",
+      "#dc7a56,#d56430",
+      "#e4987c,#dc8056",
+      "#edb9a6,#e5a080"
+    ]
+  },
+  {
+    "name": "Янтарь",
+    "colors": [
+      "#6e440c,#452d08",
+      "#8e5710,#65430b",
+      "#ae6b13,#85580f",
+      "#cf7f17,#a56d12",
+      "#e79223,#c58216",
+      "#eba447,#e6991e",
+      "#efb871,#ebac47",
+      "#f4cf9f,#f0c175"
+    ]
+  },
+  {
+    "name": "Охра",
+    "colors": [
+      "#695811,#423a0b",
+      "#887116,#605410",
+      "#a78b1b,#7f6f15",
+      "#c5a420,#9e8a1a",
+      "#ddb92c,#bda51f",
+      "#e2c550,#dcc128",
+      "#e9d277,#e2cc50",
+      "#f0e1a3,#ead97b"
+    ]
+  },
+  {
+    "name": "Олива",
+    "colors": [
+      "#445823,#293716",
+      "#58712d,#3c5020",
+      "#6c8b37,#4f6a2a",
+      "#80a441,#628334",
+      "#93b950,#769d3f",
+      "#a5c56d,#8bb84c",
+      "#b9d28e,#a0c56d",
+      "#d0e0b2,#b8d392"
+    ]
+  },
+  {
+    "name": "Изумруд",
+    "colors": [
+      "#1f5b39,#143926",
+      "#28764a,#1d5437",
+      "#31905b,#266e49",
+      "#3bab6b,#2f895a",
+      "#49c17d,#38a36c",
+      "#67cb92,#45bf80",
+      "#89d7ab,#67cb97",
+      "#afe4c6,#8dd8b1"
+    ]
+  },
+  {
+    "name": "Бирюза",
+    "colors": [
+      "#1c5f5b,#113b3b",
+      "#247b76,#195757",
+      "#2c9691,#217373",
+      "#34b2ac,#298e8e",
+      "#41c8c1,#31aaaa",
+      "#61d1cb,#3dc7c7",
+      "#84dbd7,#61d1d1",
+      "#ace7e4,#88dddd"
+    ]
+  },
+  {
+    "name": "Лазурь",
+    "colors": [
+      "#154466,#0d283f",
+      "#1b5883,#133b5d",
+      "#216ca1,#194d7b",
+      "#277fbe,#1f6098",
+      "#3492d5,#2572b6",
+      "#56a4dc,#3088d5",
+      "#7cb9e4,#569ddc",
+      "#a6cfed,#80b6e5"
+    ]
+  },
+  {
+    "name": "Индиго",
+    "colors": [
+      "#192361,#10133d",
+      "#202d7e,#171d59",
+      "#28379a,#1e2676",
+      "#2f41b6,#262f92",
+      "#3c50cd,#2d38ae",
+      "#5d6dd5,#3845cc",
+      "#818edf,#5d67d5",
+      "#aab2e9,#858de0"
+    ]
+  },
+  {
+    "name": "Фиалка",
+    "colors": [
+      "#3d1d5e,#28123b",
+      "#4f2579,#3b1a56",
+      "#612e94,#4e2371",
+      "#7336b0,#612b8c",
+      "#8544c5,#7334a8",
+      "#9963cf,#8940c4",
+      "#b086da,#9e63cf",
+      "#c9ade6,#b78adb"
+    ]
+  },
+  {
+    "name": "Роза",
+    "colors": [
+      "#5f1c4a,#3b112c",
+      "#7b245f,#571940",
+      "#962c74,#732155",
+      "#b2348a,#8e2969",
+      "#c8419d,#aa317e",
+      "#d161ae,#c73d94",
+      "#db84c0,#d161a8",
+      "#e7acd4,#dd88be"
+    ]
+  },
+  {
+    "name": "Нейтральные",
+    "colors": [
+      "#373c43,#22252a",
+      "#474d57,#32363e",
+      "#575e6b,#434751",
+      "#67707e,#535865",
+      "#788191,#636a79",
+      "#8f96a3,#767d8f",
+      "#a8aeb8,#8f95a3",
+      "#c4c8cf,#abb0ba"
+    ]
+  }
+];
+  var ACCENTS = COLOR_GROUPS.reduce(function (all, group) { return all.concat(group.colors); }, []);
   var WD = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
   var MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   var MONTHS_N = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
@@ -867,11 +1022,18 @@
     return 'pending';
   }
 
+  function avatarInk(colors) {
+    var channels = colors.map(function (hex) { return hex.slice(1).match(/../g).map(function (n) { return parseInt(n, 16) / 255; }); });
+    var midpoint = channels[0].map(function (n, i) { return (n + channels[1][i]) / 2; });
+    var linear = midpoint.map(function (c) { return c <= .04045 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); });
+    var luminance = linear[0] * .2126 + linear[1] * .7152 + linear[2] * .0722;
+    return luminance > .179 ? '#101619' : '#ffffff';
+  }
   function avStyle(ch) {
     if (ch.avatar) return 'background-image:url(' + ch.avatar + ')';
     // Display legacy green avatars in the new palette without rewriting saved data.
     var a = (['#00dd76,#0aa9a0', '#fff34d,#e8bd00', '#f1e5bc,#c9b77c'].indexOf(ch.accent) !== -1 ? '#ffd84d,#f2cb3f' : ch.accent).split(',');
-    return 'background-image:linear-gradient(140deg, ' + a[0] + ', ' + a[1] + ')';
+    return 'background-image:linear-gradient(140deg, ' + a[0] + ', ' + a[1] + ');color:' + avatarInk(a);
   }
   function initials(ch) { return ch.avatar ? '' : (ch.name.trim()[0] || '?'); }
 
@@ -1459,7 +1621,7 @@
   function openEditor(ch) {
     var isNew = !ch;
     draft = isNew
-      ? { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: '', avatar: '', accent: ACCENTS[state.channels.length % ACCENTS.length], start: TODAY }
+      ? { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: '', avatar: '', accent: COLOR_GROUPS[state.channels.length % COLOR_GROUPS.length].colors[4], start: TODAY }
       : JSON.parse(JSON.stringify(ch));
 
     $('veil').innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' +
@@ -1468,10 +1630,12 @@
         '<button class="av avpick" id="avPick" style="' + avStyle(draft) + '">' + esc(initials(draft)) + '</button>' +
         '<div class="avhint">Загрузите аватарку канала — она обрежется в квадрат.<br><button id="avClear">Убрать картинку</button></div>' +
       '</div></div>' +
-      '<div class="field"><label>Цвет без картинки</label><div class="swatches">' +
-        ACCENTS.map(function (a) {
-          var p = a.split(',');
-          return '<button class="sw ' + (a === draft.accent ? 'is-on' : '') + '" data-acc="' + a + '" style="background:linear-gradient(140deg, ' + p[0] + ', ' + p[1] + ')"></button>';
+      '<div class="field"><label>Палитра канала <span class="palette-count">96 оттенков</span></label><p class="palette-hint">По цветовому кругу · от тёмного к светлому</p><div class="swatches artist-palette">' +
+        COLOR_GROUPS.map(function (group) {
+          return '<div class="color-family"><span class="color-family-name">' + group.name + '</span><div class="color-tones" role="group" aria-label="' + group.name + '">' + group.colors.map(function (a, i) {
+            var p = a.split(','), label = group.name + ', тон ' + (i + 1) + ', ' + p[0];
+            return '<button type="button" class="sw ' + (a === draft.accent ? 'is-on' : '') + '" data-acc="' + a + '" aria-label="' + label + '" title="' + label + '" aria-pressed="' + (a === draft.accent) + '" style="background:linear-gradient(140deg, ' + p[0] + ', ' + p[1] + ')"></button>';
+          }).join('') + '</div></div>';
         }).join('') +
       '</div></div>' +
       '<div class="field"><label>Название канала</label>' +
@@ -1497,7 +1661,7 @@
       (function (b) {
         b.onclick = function () {
           draft.accent = b.getAttribute('data-acc');
-          for (var j = 0; j < sws.length; j++) sws[j].classList.toggle('is-on', sws[j] === b);
+          for (var j = 0; j < sws.length; j++) { sws[j].classList.toggle('is-on', sws[j] === b); sws[j].setAttribute('aria-pressed', String(sws[j] === b)); }
           refreshAv();
         };
       })(sws[i]);
@@ -1574,5 +1738,7 @@
 })();
 </script>
 </div>
+<a class="space-credit" href="https://science.nasa.gov/asset/hubble/the-hubble-ultra-deep-field/" target="_blank" rel="noopener noreferrer">Фон: NASA, ESA, S. Beckwith (STScI) и HUDF Team</a>
+<script src="space-stars.js" defer></script>
 </body>
 </html>
