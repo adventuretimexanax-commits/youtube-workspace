@@ -87,7 +87,7 @@ try:
     assert page.locator('[data-acc][aria-pressed="true"]').get_attribute('data-acc') == chosen
     page.locator('#bCancel').click()
     assert page.locator('#space-stars').evaluate('(e)=>e.width*e.height') <= 3010000
-    assert page.locator('.space-photo').evaluate('(e)=>getComputedStyle(e).backgroundImage').find('hubble-deep-field.webp') >= 0
+    assert page.locator('.space-photo').evaluate('(e)=>getComputedStyle(e).backgroundImage').find('moon-background.png') >= 0
     assert page.locator('[data-card]').first.evaluate('(e)=>getComputedStyle(e).backdropFilter') == 'none'
     assert not errors, errors
     browser.close()

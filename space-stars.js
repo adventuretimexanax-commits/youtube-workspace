@@ -1,4 +1,4 @@
-/* Decorative foreground stars only. The real Hubble photograph stays a static CSS layer.
+/* Decorative foreground stars only. The owner-provided Moon image stays a static CSS layer.
    No WebGL, no backdrop filters, no per-frame allocations or data access. */
 (function () {
   'use strict';
