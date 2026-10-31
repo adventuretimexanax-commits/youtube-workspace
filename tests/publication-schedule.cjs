@@ -1,0 +1,15 @@
+const select=require('../publication-schedule.js'),assert=require('node:assert/strict');
+const ch={id:'a',start:'2026-01-01'},now='2026-10-31',none=()=>false;
+const marks={'2026-11-15':'plan','2026-11-02':'plan','2026-11-01':'done','2026-10-29':'plan','2026-10-30':'rest','2026-10-28':'miss'};
+const snapshot=JSON.stringify(marks);
+assert.deepEqual(select(ch,marks,now,none),{paused:false,next:'2026-11-02',overdue:'2026-10-29'});
+assert.equal(select(ch,{...marks,[now]:'plan'},now,none).next,now);
+assert.deepEqual(select(ch,{},now,none),{paused:false,next:null,overdue:null});
+assert.deepEqual(select(ch,marks,now,()=>true),{paused:true,next:null,overdue:null});
+assert.equal(select(ch,marks,now,(c,day)=>day==='2026-10-29').overdue,null,'plans during historical pause not overdue');
+assert.equal(select(ch,{'2027-01-02':'plan'},now,none).next,'2027-01-02');
+assert.equal(select(ch,{'2026-02-31':'plan','2026-13-01':'plan','bad':'plan','2026-11-02':'done'},now,none).next,null);
+assert.equal(select({...ch,start:'2026-11-01'},marks,now,none).overdue,null);
+assert.equal(select(ch,{'2026-10-31':'plan'},'2026-11-01',none).overdue,'2026-10-31','midnight changes urgency');
+assert.equal(JSON.stringify(marks),snapshot,'summary never rewrites raw plan marks');
+console.log('PASS: cross-month/year planning, today, overdue, done ignored, frozen/history, invalid dates, midnight, no mutations');

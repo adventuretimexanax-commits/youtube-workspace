@@ -206,3 +206,10 @@ html,body,#app-root{background:#030303}
 }
 #app-root button:focus-visible{outline:1px solid #fff;outline-offset:2px;box-shadow:0 0 7px #ffffff44}
 #app-root .order-grip:disabled{opacity:.22;cursor:default}
+/* Next upload replaces month counters in the channel list only. */
+#app-root .channel-nav-text .channel-schedule{display:block;font-size:11px;line-height:1.35;margin-top:4px;font-weight:450;white-space:normal}
+#app-root .channel-nav-text .schedule-next{color:#dfdfdf}
+#app-root .channel-nav-text .schedule-today{color:#ffe17c;font-weight:650}
+#app-root .channel-nav-text .schedule-overdue{color:#ff989e;font-weight:600}
+#app-root .channel-nav-text .schedule-empty,#app-root .channel-nav-text .schedule-paused{color:#aaa}
+#app-root .channel-schedule time{white-space:nowrap}

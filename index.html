@@ -636,7 +636,7 @@
   .workspace [hidden] { display: none !important; }
   .workspace-status:empty { display: none; }
 </style>
-<link rel="stylesheet" href="workspace-layout.css?v=white-hover-20261031">
+<link rel="stylesheet" href="workspace-layout.css?v=next-publication-20261031">
 </head>
 <body>
 <div id="app-root">
@@ -703,6 +703,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="channel-order.js"></script>
+<script src="publication-schedule.js"></script>
 <script>
 (function () {
   var root = document.getElementById('app-root');
@@ -1235,17 +1236,28 @@
     });
     $('viewHint').textContent = layout.mode === 'focus' ? 'Один канал · переключение слева' : 'Все каналы перед глазами';
   }
+  function scheduleDate(dk) {
+    return Number(dk.slice(8, 10)) + ' ' + MONTHS[Number(dk.slice(5, 7)) - 1] + (dk.slice(0, 4) !== TODAY.slice(0, 4) ? ' ' + dk.slice(0, 4) : '');
+  }
+  function scheduleHTML(ch) {
+    var summary = publicationSchedule(ch, state.marks[ch.id], TODAY, frozenOn);
+    if (summary.paused) return '<small class="channel-schedule schedule-paused">❄ На паузе</small>';
+    var html = '';
+    if (summary.next) html += '<small class="channel-schedule ' + (summary.next === TODAY ? 'schedule-today' : 'schedule-next') + '">' +
+      (summary.next === TODAY ? 'Сегодня: ' : 'Следующее: ') + '<time datetime="' + summary.next + '">' + scheduleDate(summary.next) + '</time></small>';
+    if (summary.overdue) html += '<small class="channel-schedule schedule-overdue">Просрочено: <time datetime="' + summary.overdue + '">' + scheduleDate(summary.overdue) + '</time></small>';
+    return html || '<small class="channel-schedule schedule-empty">Не запланировано</small>';
+  }
   var orderSaving = false, draggedChannel = null;
   function railHTML() {
     return [false, true].map(function (paused) {
       var channels = state.channels.filter(function (ch) { return isFrozen(ch) === paused; });
       if (!channels.length) return '';
-      return '<div class="rail-group-label">' + (paused ? 'На паузе' : 'Активные') + ' · ' + channels.length + '</div>' + channels.map(function (ch, i) {
-        var st = monthStats(ch, view.getFullYear(), view.getMonth());
+      return '<div class="rail-group-label">' + (paused ? 'На паузе' : 'Активные') + ' · ' + channels.length + '</div>' + channels.map(function (ch) {
         return '<div class="channel-row" data-order-row="' + esc(ch.id) + '">' +
           '<button type="button" class="order-grip" draggable="true" data-drag-channel="' + esc(ch.id) + '" aria-label="Перетащить канал" title="Перетащить канал"' + (orderSaving ? ' disabled' : '') + '>⠿</button>' +
           '<button class="channel-nav" data-open-channel="' + esc(ch.id) + '" aria-pressed="' + (ch.id === layout.selected) + '">' + avBox(ch, '') +
-          '<span class="channel-nav-text"><b>' + nameHTML(ch) + '</b><small>' + (paused ? '❄ На паузе' : st.done + ' выложено · ' + st.miss + ' пропусков') + '</small></span></button>' +
+          '<span class="channel-nav-text"><b>' + nameHTML(ch) + '</b>' + scheduleHTML(ch) + '</span></button>' +
           '</div>';
       }).join('');
     }).join('');
@@ -1795,6 +1807,14 @@
       fr.onerror = rej; fr.readAsDataURL(file);
     });
   }
+
+  function refreshCalendarDate() {
+    var current = key(new Date());
+    if (current !== TODAY) { TODAY = current; closeChooser(); render(); }
+  }
+  window.addEventListener('focus', refreshCalendarDate);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshCalendarDate(); });
+  if (typeof setInterval === 'function') setInterval(refreshCalendarDate, 60000);
 
   render();
   load().then(render);
